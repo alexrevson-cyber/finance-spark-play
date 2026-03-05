@@ -1,6 +1,6 @@
 import { useState, useCallback, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Brain, Trophy, CheckCircle2, XCircle, ArrowRight, RotateCcw, Sparkles, Flame, Clock, Filter, Medal, AlertTriangle, BookOpen, Link2 } from "lucide-react";
+import { Brain, Trophy, CheckCircle2, XCircle, ArrowRight, RotateCcw, Sparkles, Flame, Clock, Filter, Medal, AlertTriangle, BookOpen, Link2, Share2 } from "lucide-react";
 import confetti from "canvas-confetti";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -306,10 +306,23 @@ const TestPage = () => {
                 : "Every expert was once a beginner. Keep going! 🌱"}
             </p>
             {bestStreak > 1 && <p className="text-sm text-accent font-medium mb-4">Best streak: {bestStreak} in a row! 🔥</p>}
-            <div className="flex gap-3 justify-center">
+            <div className="flex gap-3 justify-center flex-wrap">
               <button onClick={() => setMode("menu")}
                 className="inline-flex items-center gap-2 px-6 py-3 rounded-lg bg-hero-gradient text-primary-foreground font-medium text-sm shadow-soft">
                 <RotateCcw className="w-4 h-4" /> Back to Menu
+              </button>
+              <button
+                onClick={() => {
+                  const text = `I scored ${score}/${questions.length} on InvestWise! 📈 Test your investing knowledge too!`;
+                  if (navigator.share) {
+                    navigator.share({ title: "InvestWise Quiz Score", text });
+                  } else {
+                    navigator.clipboard.writeText(text);
+                    alert("Score copied to clipboard!");
+                  }
+                }}
+                className="inline-flex items-center gap-2 px-6 py-3 rounded-lg bg-secondary text-secondary-foreground font-medium text-sm hover:bg-secondary/80 transition-colors">
+                <Share2 className="w-4 h-4" /> Share Score
               </button>
             </div>
           </motion.div>

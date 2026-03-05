@@ -1,6 +1,6 @@
 import { Link, useLocation } from "react-router-dom";
-import { TrendingUp, BookOpen, Brain, Library, Calculator, Menu, X, LogIn, LogOut, User } from "lucide-react";
-import { useState } from "react";
+import { TrendingUp, BookOpen, Brain, Library, Calculator, Menu, X, LogIn, LogOut, Moon, Sun } from "lucide-react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "@/contexts/AuthContext";
 
@@ -16,6 +16,23 @@ const Navbar = () => {
   const location = useLocation();
   const [mobileOpen, setMobileOpen] = useState(false);
   const { user, profile, signOut } = useAuth();
+  const [darkMode, setDarkMode] = useState(() => {
+    if (typeof window !== "undefined") {
+      return document.documentElement.classList.contains("dark") ||
+        localStorage.getItem("theme") === "dark";
+    }
+    return false;
+  });
+
+  useEffect(() => {
+    if (darkMode) {
+      document.documentElement.classList.add("dark");
+      localStorage.setItem("theme", "dark");
+    } else {
+      document.documentElement.classList.remove("dark");
+      localStorage.setItem("theme", "light");
+    }
+  }, [darkMode]);
 
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-xl border-b border-border">
@@ -55,6 +72,13 @@ const Navbar = () => {
               );
             })}
             <div className="w-px h-6 bg-border mx-2" />
+            <button
+              onClick={() => setDarkMode(!darkMode)}
+              className="p-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-secondary transition-all"
+              aria-label="Toggle dark mode"
+            >
+              {darkMode ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+            </button>
             {user ? (
               <div className="flex items-center gap-2">
                 <span className="text-sm text-muted-foreground">{profile?.display_name || 'User'}</span>
@@ -71,9 +95,18 @@ const Navbar = () => {
           </div>
 
           {/* Mobile toggle */}
-          <button onClick={() => setMobileOpen(!mobileOpen)} className="md:hidden p-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors">
-            {mobileOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
-          </button>
+          <div className="flex items-center gap-2 md:hidden">
+            <button
+              onClick={() => setDarkMode(!darkMode)}
+              className="p-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors"
+              aria-label="Toggle dark mode"
+            >
+              {darkMode ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+            </button>
+            <button onClick={() => setMobileOpen(!mobileOpen)} className="p-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors">
+              {mobileOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+            </button>
+          </div>
         </div>
       </div>
 
