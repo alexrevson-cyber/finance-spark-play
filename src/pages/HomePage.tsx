@@ -161,12 +161,15 @@ const HomePage = () => {
                   {user ? `Welcome back, ${profile?.display_name || 'investor'}!` : 'Start your journey'}
                 </span>
               </motion.div>
-              <motion.h1 custom={1} variants={fadeUp} className="text-4xl sm:text-5xl lg:text-6xl font-serif font-bold leading-tight text-foreground">
+              <motion.p custom={1} variants={fadeUp} className="text-sm font-semibold tracking-widest uppercase text-accent">
+                Invest smarter. Start today.
+              </motion.p>
+              <motion.h1 custom={2} variants={fadeUp} className="text-4xl sm:text-5xl lg:text-6xl font-serif font-bold leading-tight text-foreground">
                 Investing made{" "}
                 <span className="text-gradient-primary">simple</span> &{" "}
                 <span className="text-gradient-gold">rewarding</span>
               </motion.h1>
-              <motion.p custom={2} variants={fadeUp} className="text-lg text-muted-foreground max-w-lg leading-relaxed">
+              <motion.p custom={3} variants={fadeUp} className="text-lg text-muted-foreground max-w-lg leading-relaxed">
                 Learn at your own pace, test your knowledge with fun quizzes, and build the confidence to grow your wealth. No jargon, no judgment — just clear guidance.
               </motion.p>
               <motion.div custom={3} variants={fadeUp} className="flex flex-wrap gap-3">
