@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { Sparkles, TrendingUp, ArrowRight, Quote, Lightbulb, Newspaper, BarChart3, Flame, Trophy, BookOpen, AlertTriangle, TrendingDown } from "lucide-react";
+import { Sparkles, TrendingUp, ArrowRight, Quote, Lightbulb, Newspaper, BarChart3, Flame, Trophy, BookOpen, AlertTriangle, TrendingDown, Brain, Library } from "lucide-react";
 import heroImage from "@/assets/hero-illustration.png";
 import { useAuth } from "@/contexts/AuthContext";
 import { Link } from "react-router-dom";
@@ -172,7 +172,7 @@ const HomePage = () => {
               <motion.p custom={3} variants={fadeUp} className="text-lg text-muted-foreground max-w-lg leading-relaxed">
                 Learn at your own pace, test your knowledge with fun quizzes, and build the confidence to grow your wealth. No jargon, no judgment — just clear guidance.
               </motion.p>
-              <motion.div custom={3} variants={fadeUp} className="flex flex-wrap gap-3">
+              <motion.div custom={4} variants={fadeUp} className="flex flex-wrap gap-3">
                 {user ? (
                   <>
                     <Link to="/learn" className="inline-flex items-center gap-2 px-6 py-3 rounded-lg bg-hero-gradient text-primary-foreground font-medium text-sm shadow-soft hover:shadow-elevated transition-all duration-300 hover:-translate-y-0.5">
@@ -195,9 +195,33 @@ const HomePage = () => {
               </motion.div>
             </motion.div>
             <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.3, duration: 0.6 }} className="hidden lg:block">
-              <img src={heroImage} alt="Financial growth illustration showing a tree growing from rising chart lines" className="w-full rounded-2xl shadow-elevated" />
+              <img src={heroImage} alt="Financial growth illustration showing a tree growing from rising chart lines" className="w-full rounded-2xl shadow-elevated" loading="lazy" />
             </motion.div>
           </div>
+        </div>
+      </section>
+
+      {/* Feature Highlight Cards */}
+      <section className="max-w-6xl mx-auto px-4 sm:px-6 pb-8">
+        <div className="grid sm:grid-cols-3 gap-4">
+          {[
+            { icon: BookOpen, title: "Learn", desc: "Master investing fundamentals from stocks to retirement planning with simple, jargon-free lessons.", to: "/learn", color: "bg-primary/10 text-primary" },
+            { icon: Brain, title: "Test", desc: "Challenge yourself with quizzes, earn streaks, and compete on the leaderboard to solidify your knowledge.", to: "/test", color: "bg-accent/10 text-accent" },
+            { icon: Library, title: "Knowledge", desc: "Explore book summaries, investor spotlights, and curated resources from the world's best financial minds.", to: "/knowledge", color: "bg-success/10 text-success" },
+          ].map((card, i) => (
+            <motion.div key={card.title} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 + i * 0.1 }}>
+              <Link to={card.to} className="block rounded-xl bg-card border border-border p-6 shadow-card hover:shadow-elevated hover:-translate-y-1 transition-all duration-300 group">
+                <div className={`w-11 h-11 rounded-lg ${card.color} flex items-center justify-center mb-4 group-hover:scale-110 transition-transform`}>
+                  <card.icon className="w-5 h-5" />
+                </div>
+                <h3 className="font-serif font-bold text-lg text-foreground mb-2">{card.title}</h3>
+                <p className="text-sm text-muted-foreground leading-relaxed mb-3">{card.desc}</p>
+                <span className="text-sm font-medium text-primary flex items-center gap-1">
+                  Explore <ArrowRight className="w-3.5 h-3.5" />
+                </span>
+              </Link>
+            </motion.div>
+          ))}
         </div>
       </section>
 
