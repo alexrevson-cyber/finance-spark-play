@@ -122,6 +122,7 @@ const HomePage = () => {
   const [streakData, setStreakData] = useState({ current_streak: 0, best_streak: 0 });
   const [lessonsCompleted, setLessonsCompleted] = useState(0);
   const [lastQuizScore, setLastQuizScore] = useState<string>("—");
+  const dailyQuizDone = typeof window !== "undefined" && !!localStorage.getItem(`daily_quiz_${new Date().toISOString().slice(0, 10)}`);
 
   useEffect(() => {
     if (!user) return;
@@ -224,6 +225,26 @@ const HomePage = () => {
           ))}
         </div>
       </section>
+
+      {/* Daily Quiz Reminder */}
+      {!dailyQuizDone && (
+        <section className="max-w-6xl mx-auto px-4 sm:px-6 pb-6">
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.25 }}>
+            <Link to="/test" className="block rounded-xl bg-accent/10 border border-accent/20 p-5 hover:bg-accent/15 transition-colors group">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 rounded-full bg-accent/20 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
+                  <Sparkles className="w-6 h-6 text-accent" />
+                </div>
+                <div className="flex-1">
+                  <p className="font-serif font-bold text-foreground">Your Daily Quiz is waiting!</p>
+                  <p className="text-sm text-muted-foreground">Answer 5 questions to keep your streak alive.</p>
+                </div>
+                <ArrowRight className="w-5 h-5 text-accent shrink-0" />
+              </div>
+            </Link>
+          </motion.div>
+        </section>
+      )}
 
       {/* Market Snapshot */}
       <section className="max-w-6xl mx-auto px-4 sm:px-6 pb-6">

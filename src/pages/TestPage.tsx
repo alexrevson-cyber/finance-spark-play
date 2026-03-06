@@ -1,6 +1,6 @@
 import { useState, useCallback, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Brain, Trophy, CheckCircle2, XCircle, ArrowRight, RotateCcw, Sparkles, Flame, Clock, Filter, Medal, AlertTriangle, BookOpen, Link2, Share2 } from "lucide-react";
+import { Brain, Trophy, CheckCircle2, XCircle, ArrowRight, RotateCcw, Sparkles, Flame, Clock, Filter, Medal, AlertTriangle, BookOpen, Link2, Share2, Zap, Timer } from "lucide-react";
 import confetti from "canvas-confetti";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -38,6 +38,16 @@ const allQuestions: Question[] = [
   { id: 18, question: "What is a hedge fund?", options: ["A low-cost index fund", "A private fund using advanced strategies for wealthy investors", "A government savings program", "A type of insurance"], correct: 1, explanation: "Hedge funds use complex strategies and charge high fees. Most underperform simple index funds after fees — even Warren Buffett says so.", difficulty: "advanced", topic: "hedge-funds", learnLink: "hedge-funds" },
   { id: 19, question: "What is the Rule of 72?", options: ["Invest at least 72% of income", "Divide 72 by return rate to estimate doubling time", "Never invest more than $72,000", "A tax code section"], correct: 1, explanation: "At 8% annual returns, 72 ÷ 8 = 9 years to double your money. At 12%, just 6 years. It's a quick mental math tool!", difficulty: "intermediate", topic: "general", learnLink: "index-funds" },
   { id: 20, question: "What is a covered call?", options: ["Buying a stock secretly", "Selling a call option on stock you own", "Calling your broker for advice", "A type of insurance policy"], correct: 1, explanation: "A covered call generates income by selling the right for someone to buy your stock at a higher price. It's one of the simplest options strategies.", difficulty: "advanced", topic: "options", learnLink: "options" },
+  { id: 21, question: "What is a market capitalization?", options: ["Total revenue of a company", "Share price multiplied by total shares outstanding", "The company's total debt", "Annual profit of a company"], correct: 1, explanation: "Market cap = share price × total shares. It tells you the market's valuation of a company's equity.", difficulty: "beginner", topic: "stocks", learnLink: "stocks" },
+  { id: 22, question: "What is a bear market?", options: ["A market rising more than 20%", "A market falling more than 20%", "A flat market", "A market for commodities"], correct: 1, explanation: "A bear market is a 20%+ decline from recent highs. Historically, they last an average of about 9-12 months.", difficulty: "beginner", topic: "general", learnLink: "stocks" },
+  { id: 23, question: "What does 'liquidity' mean in investing?", options: ["How much cash you have", "How easily an asset can be converted to cash", "The interest rate on a bond", "A type of mutual fund"], correct: 1, explanation: "Liquidity refers to how quickly and easily you can buy or sell an investment without significantly affecting its price.", difficulty: "intermediate", topic: "general", learnLink: "stocks" },
+  { id: 24, question: "What is a mutual fund's load?", options: ["Its total assets", "A sales commission charged to investors", "Its annual return", "The number of stocks it holds"], correct: 1, explanation: "A 'load' is a sales commission. No-load funds don't charge this fee — always prefer no-load funds to keep more of your returns.", difficulty: "intermediate", topic: "etfs", learnLink: "etfs" },
+  { id: 25, question: "What is the 4% rule in retirement planning?", options: ["Save 4% of your income", "Withdraw 4% of your portfolio annually in retirement", "Earn at least 4% returns", "Invest in 4 different assets"], correct: 1, explanation: "The 4% rule suggests you can withdraw 4% per year from your retirement portfolio with a high probability of not running out of money over 30 years.", difficulty: "intermediate", topic: "retirement", learnLink: "retirement" },
+  { id: 26, question: "What is beta in investing?", options: ["A company's profit margin", "A measure of a stock's volatility relative to the market", "The dividend yield", "A type of bond rating"], correct: 1, explanation: "Beta measures how much a stock moves relative to the overall market. A beta > 1 means more volatile, < 1 means less volatile.", difficulty: "advanced", topic: "stocks", learnLink: "stocks" },
+  { id: 27, question: "What is dollar-weighted return?", options: ["Total return divided by years", "Return that accounts for timing and size of cash flows", "The return in US dollars only", "Average annual return"], correct: 1, explanation: "Dollar-weighted return (IRR) accounts for when you add or withdraw money, giving a personal performance measure.", difficulty: "advanced", topic: "general", learnLink: "index-funds" },
+  { id: 28, question: "What is a yield curve inversion?", options: ["When stocks outperform bonds", "When short-term rates exceed long-term rates", "When dividends increase", "When inflation drops"], correct: 1, explanation: "An inverted yield curve — short-term bonds paying more than long-term — has historically preceded recessions.", difficulty: "advanced", topic: "bonds", learnLink: "bonds" },
+  { id: 29, question: "What is rebalancing a portfolio?", options: ["Selling all investments", "Adjusting holdings back to target allocation", "Only buying bonds", "Switching brokers"], correct: 1, explanation: "Rebalancing means selling what's grown beyond your target and buying what's shrunk, systematically buying low and selling high.", difficulty: "intermediate", topic: "diversification", learnLink: "diversification" },
+  { id: 30, question: "What is an expense ratio considered low?", options: ["Under 5%", "Under 1%", "Under 0.20%", "Under 10%"], correct: 2, explanation: "Index funds often have expense ratios under 0.10%. Anything above 0.50% is considered high for a passively managed fund.", difficulty: "beginner", topic: "etfs", learnLink: "etfs" },
 ];
 
 const topicOptions = [
@@ -55,6 +65,7 @@ const topicOptions = [
   { value: "behavioral", label: "Behavioral Finance" },
   { value: "options", label: "Options" },
   { value: "hedge-funds", label: "Hedge Funds" },
+  { value: "general", label: "General" },
 ];
 
 const mockLeaderboard = [
@@ -68,13 +79,35 @@ const mockLeaderboard = [
   { name: "ETFExpert", score: 132, streak: 5 },
 ];
 
+const mockTimedLeaderboard = [
+  { name: "SpeedTrader", time: 12, streak: 8 },
+  { name: "QuickMind", time: 18, streak: 6 },
+  { name: "FlashInvestor", time: 22, streak: 5 },
+  { name: "RapidRecall", time: 25, streak: 4 },
+  { name: "SwiftAnalyst", time: 31, streak: 3 },
+];
+
 const difficultyColors = {
   beginner: "bg-success/10 text-success",
   intermediate: "bg-accent/20 text-accent-foreground",
   advanced: "bg-destructive/10 text-destructive",
 };
 
-type QuizMode = "menu" | "quiz" | "daily" | "timed" | "complete";
+type QuizMode = "menu" | "quiz" | "daily" | "timed" | "complete" | "timed-result";
+
+const DAILY_QUESTIONS_COUNT = 5;
+const TIMED_SECONDS = 120;
+
+// Helper to get seen question IDs from localStorage
+const getSeenDailyIds = (): number[] => {
+  try { return JSON.parse(localStorage.getItem("daily_seen_ids") || "[]"); } catch { return []; }
+};
+const saveSeenDailyIds = (ids: number[]) => localStorage.setItem("daily_seen_ids", JSON.stringify(ids));
+
+const getSeenTimedIds = (): number[] => {
+  try { return JSON.parse(localStorage.getItem("timed_seen_ids") || "[]"); } catch { return []; }
+};
+const saveSeenTimedIds = (ids: number[]) => localStorage.setItem("timed_seen_ids", JSON.stringify(ids));
 
 const TestPage = () => {
   const [mode, setMode] = useState<QuizMode>("menu");
@@ -91,23 +124,32 @@ const TestPage = () => {
   const [timeLeft, setTimeLeft] = useState(0);
   const [showLeaderboard, setShowLeaderboard] = useState(false);
   const [dailyCompleted, setDailyCompleted] = useState(false);
+  const [dailyStreak, setDailyStreak] = useState(0);
+  const [timedAnswerTime, setTimedAnswerTime] = useState(0);
+  const [timedPersonalBest, setTimedPersonalBest] = useState<number | null>(null);
+  const [timedWinStreak, setTimedWinStreak] = useState(0);
+  const [showTimedLeaderboard, setShowTimedLeaderboard] = useState(false);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const timedStartRef = useRef(0);
   const { user } = useAuth();
 
-  // Daily quiz check
+  // Load daily quiz state & streak
   useEffect(() => {
     const key = `daily_quiz_${new Date().toISOString().slice(0, 10)}`;
     if (localStorage.getItem(key)) setDailyCompleted(true);
+    setDailyStreak(parseInt(localStorage.getItem("daily_streak") || "0", 10));
+    setTimedPersonalBest(localStorage.getItem("timed_pb") ? parseFloat(localStorage.getItem("timed_pb")!) : null);
+    setTimedWinStreak(parseInt(localStorage.getItem("timed_win_streak") || "0", 10));
   }, []);
 
-  // Timer
+  // Timer for timed mode
   useEffect(() => {
     if (mode === "timed" && timeLeft > 0 && !showResult) {
       timerRef.current = setInterval(() => {
-        setTimeLeft((t) => {
+        setTimeLeft(t => {
           if (t <= 1) {
             clearInterval(timerRef.current!);
-            setMode("complete");
+            setMode("timed-result");
             return 0;
           }
           return t - 1;
@@ -121,14 +163,41 @@ const TestPage = () => {
     confetti({ particleCount: 80, spread: 70, origin: { y: 0.6 }, colors: ["#2d7a5f", "#d4a017", "#f0c040", "#4ade80"] });
   }, []);
 
+  const pickDailyQuestions = (): Question[] => {
+    const seenIds = getSeenDailyIds();
+    let unseen = allQuestions.filter(q => !seenIds.includes(q.id));
+    if (unseen.length < DAILY_QUESTIONS_COUNT) {
+      // Reset cycle with new order
+      saveSeenDailyIds([]);
+      unseen = [...allQuestions];
+    }
+    // Shuffle and pick 5 from diverse topics/difficulties
+    const shuffled = unseen.sort(() => Math.random() - 0.5);
+    return shuffled.slice(0, DAILY_QUESTIONS_COUNT);
+  };
+
+  const pickTimedQuestion = (): Question => {
+    const pool = allQuestions.filter(q => q.difficulty === "intermediate" || q.difficulty === "advanced");
+    const seenIds = getSeenTimedIds();
+    let unseen = pool.filter(q => !seenIds.includes(q.id));
+    if (unseen.length === 0) {
+      saveSeenTimedIds([]);
+      unseen = [...pool];
+    }
+    const shuffled = unseen.sort(() => Math.random() - 0.5);
+    return shuffled[0];
+  };
+
   const startQuiz = (quizMode: "quiz" | "timed" | "daily", topic = "all") => {
-    let filtered = topic === "all" ? [...allQuestions] : allQuestions.filter((q) => q.topic === topic);
+    let filtered: Question[];
 
     if (quizMode === "daily") {
-      const dayOfYear = Math.floor((Date.now() - new Date(new Date().getFullYear(), 0, 0).getTime()) / 86400000);
-      filtered = [allQuestions[dayOfYear % allQuestions.length]];
+      filtered = pickDailyQuestions();
+    } else if (quizMode === "timed") {
+      filtered = [pickTimedQuestion()];
     } else {
-      filtered = filtered.sort(() => Math.random() - 0.5).slice(0, quizMode === "timed" ? 10 : Math.min(filtered.length, 10));
+      filtered = topic === "all" ? [...allQuestions] : allQuestions.filter(q => q.topic === topic);
+      filtered = filtered.sort(() => Math.random() - 0.5).slice(0, 10);
     }
 
     setQuestions(filtered);
@@ -141,7 +210,10 @@ const TestPage = () => {
     setShowResult(false);
     setWrongAnswers([]);
     setMode(quizMode);
-    if (quizMode === "timed") setTimeLeft(120);
+    if (quizMode === "timed") {
+      setTimeLeft(TIMED_SECONDS);
+      timedStartRef.current = Date.now();
+    }
   };
 
   const handleSelect = (index: number) => {
@@ -149,40 +221,89 @@ const TestPage = () => {
     const q = questions[currentIndex];
     setSelected(index);
     setShowResult(true);
-    setAnswered((a) => a + 1);
+    setAnswered(a => a + 1);
+
     if (index === q.correct) {
-      setScore((s) => s + 1);
+      setScore(s => s + 1);
       const ns = streak + 1;
       setStreak(ns);
       if (ns > bestStreak) setBestStreak(ns);
       fireConfetti();
+
+      if (mode === "timed") {
+        clearInterval(timerRef.current!);
+        const elapsed = Math.round((Date.now() - timedStartRef.current) / 1000);
+        setTimedAnswerTime(elapsed);
+        // Update personal best
+        const pb = timedPersonalBest;
+        if (pb === null || elapsed < pb) {
+          setTimedPersonalBest(elapsed);
+          localStorage.setItem("timed_pb", String(elapsed));
+        }
+        const newWinStreak = timedWinStreak + 1;
+        setTimedWinStreak(newWinStreak);
+        localStorage.setItem("timed_win_streak", String(newWinStreak));
+        // Track seen
+        const seenIds = getSeenTimedIds();
+        saveSeenTimedIds([...seenIds, q.id]);
+      }
     } else {
       setStreak(0);
-      setWrongAnswers((w) => [...w, { q, selectedIdx: index }]);
+      setWrongAnswers(w => [...w, { q, selectedIdx: index }]);
+      if (mode === "timed") {
+        clearInterval(timerRef.current!);
+        setTimedWinStreak(0);
+        localStorage.setItem("timed_win_streak", "0");
+        const seenIds = getSeenTimedIds();
+        saveSeenTimedIds([...seenIds, q.id]);
+      }
     }
   };
 
   const nextQuestion = () => {
+    if (mode === "timed") {
+      setMode("timed-result");
+      return;
+    }
+
     if (currentIndex + 1 >= questions.length) {
       setMode("complete");
+
       if (mode === "daily") {
-        const key = `daily_quiz_${new Date().toISOString().slice(0, 10)}`;
-        localStorage.setItem(key, "true");
+        const today = new Date().toISOString().slice(0, 10);
+        localStorage.setItem(`daily_quiz_${today}`, "true");
         setDailyCompleted(true);
+        // Mark seen IDs
+        const seenIds = getSeenDailyIds();
+        const newSeen = [...seenIds, ...questions.map(q => q.id)];
+        saveSeenDailyIds(newSeen);
+        // Update streak
+        const lastDate = localStorage.getItem("daily_last_date");
+        const yesterday = new Date(Date.now() - 86400000).toISOString().slice(0, 10);
+        let newStreak = 1;
+        if (lastDate === yesterday) {
+          newStreak = dailyStreak + 1;
+        } else if (lastDate === today) {
+          newStreak = dailyStreak; // already counted
+        }
+        setDailyStreak(newStreak);
+        localStorage.setItem("daily_streak", String(newStreak));
+        localStorage.setItem("daily_last_date", today);
+
+        // Save to DB
+        if (user) {
+          supabase.from("daily_streaks").upsert({ user_id: user.id, current_streak: newStreak, best_streak: Math.max(newStreak, dailyStreak), last_activity_date: today }, { onConflict: "user_id" });
+        }
       }
-      // Save score
+
       if (user) {
         supabase.from("quiz_scores").insert({
-          user_id: user.id,
-          score,
-          total_questions: questions.length,
-          topic: topicFilter,
-          difficulty: "mixed",
-          streak: bestStreak,
+          user_id: user.id, score, total_questions: questions.length,
+          topic: mode === "daily" ? "daily" : topicFilter, difficulty: "mixed", streak: bestStreak,
         });
       }
     } else {
-      setCurrentIndex((i) => i + 1);
+      setCurrentIndex(i => i + 1);
       setSelected(null);
       setShowResult(false);
     }
@@ -190,29 +311,102 @@ const TestPage = () => {
 
   const currentQ = questions[currentIndex];
 
+  // Timed result screen
+  if (mode === "timed-result") {
+    const correct = selected !== null && questions[0] && selected === questions[0].correct;
+    const q = questions[0];
+    return (
+      <div className="min-h-screen py-12 sm:py-16">
+        <div className="max-w-2xl mx-auto px-4 sm:px-6">
+          <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}
+            className="text-center rounded-2xl bg-card border border-border p-10 shadow-card mb-8">
+            {correct ? (
+              <>
+                <div className="w-20 h-20 rounded-full bg-success/10 flex items-center justify-center mx-auto mb-6">
+                  <CheckCircle2 className="w-10 h-10 text-success" />
+                </div>
+                <h2 className="text-3xl font-serif font-bold text-foreground mb-2">Well Done! 🎉</h2>
+                <p className="text-muted-foreground mb-2">You answered in <span className="font-bold text-foreground">{timedAnswerTime}s</span> with {TIMED_SECONDS - timedAnswerTime}s remaining!</p>
+                <p className="text-sm text-muted-foreground mb-4">{q?.explanation}</p>
+                <div className="flex justify-center gap-4 text-sm mb-6">
+                  {timedPersonalBest !== null && <div className="bg-accent/10 px-4 py-2 rounded-lg"><p className="text-xs text-muted-foreground">Personal Best</p><p className="font-bold text-foreground">{timedPersonalBest}s</p></div>}
+                  <div className="bg-primary/10 px-4 py-2 rounded-lg"><p className="text-xs text-muted-foreground">Win Streak</p><p className="font-bold text-foreground">{timedWinStreak}</p></div>
+                </div>
+              </>
+            ) : timeLeft <= 0 && selected === null ? (
+              <>
+                <div className="w-20 h-20 rounded-full bg-accent/10 flex items-center justify-center mx-auto mb-6">
+                  <Clock className="w-10 h-10 text-accent" />
+                </div>
+                <h2 className="text-3xl font-serif font-bold text-foreground mb-2">Time's Up! ⏰</h2>
+                <p className="text-muted-foreground mb-2">So close — try again!</p>
+                {q && <p className="text-sm text-foreground mb-2"><strong>Correct answer:</strong> {q.options[q.correct]}</p>}
+                {q && <p className="text-sm text-muted-foreground mb-4">{q.explanation}</p>}
+              </>
+            ) : (
+              <>
+                <div className="w-20 h-20 rounded-full bg-destructive/10 flex items-center justify-center mx-auto mb-6">
+                  <XCircle className="w-10 h-10 text-destructive" />
+                </div>
+                <h2 className="text-3xl font-serif font-bold text-foreground mb-2">Not quite! 💪</h2>
+                <p className="text-muted-foreground mb-2">So close — try again!</p>
+                {q && <p className="text-sm text-foreground mb-2"><strong>Correct answer:</strong> {q.options[q.correct]}</p>}
+                {q && <p className="text-sm text-muted-foreground mb-4">{q.explanation}</p>}
+              </>
+            )}
+            <div className="flex gap-3 justify-center flex-wrap">
+              <button onClick={() => startQuiz("timed")}
+                className="inline-flex items-center gap-2 px-6 py-3 rounded-lg bg-hero-gradient text-primary-foreground font-medium text-sm shadow-soft">
+                <Zap className="w-4 h-4" /> New Challenge
+              </button>
+              <button onClick={() => setMode("menu")}
+                className="inline-flex items-center gap-2 px-6 py-3 rounded-lg bg-secondary text-secondary-foreground font-medium text-sm">
+                <RotateCcw className="w-4 h-4" /> Back to Menu
+              </button>
+              <button onClick={() => setShowTimedLeaderboard(true)}
+                className="inline-flex items-center gap-2 px-6 py-3 rounded-lg bg-secondary text-secondary-foreground font-medium text-sm">
+                <Medal className="w-4 h-4" /> Leaderboard
+              </button>
+            </div>
+          </motion.div>
+        </div>
+      </div>
+    );
+  }
+
+  // Timed leaderboard
+  if (showTimedLeaderboard) {
+    return (
+      <div className="min-h-screen py-12 sm:py-16">
+        <div className="max-w-2xl mx-auto px-4 sm:px-6">
+          <button onClick={() => setShowTimedLeaderboard(false)} className="flex items-center gap-2 text-muted-foreground hover:text-foreground mb-8 text-sm font-medium">← Back</button>
+          <div className="flex items-center gap-3 mb-8"><Timer className="w-8 h-8 text-accent" /><h1 className="text-3xl font-serif font-bold text-foreground">Timed Challenge Leaderboard</h1></div>
+          <p className="text-sm text-muted-foreground mb-6">Fastest correct answers</p>
+          <div className="space-y-3">
+            {mockTimedLeaderboard.map((e, i) => (
+              <div key={e.name} className={`flex items-center gap-4 rounded-xl bg-card border border-border p-4 shadow-card ${i < 3 ? "border-accent/30" : ""}`}>
+                <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm ${i === 0 ? "bg-accent/20 text-accent" : "bg-secondary text-muted-foreground"}`}>{i + 1}</div>
+                <div className="flex-1"><p className="font-medium text-foreground">{e.name}</p><p className="text-xs text-muted-foreground">{e.streak} win streak</p></div>
+                <p className="text-lg font-bold text-foreground">{e.time}s</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   if (showLeaderboard) {
     return (
       <div className="min-h-screen py-12 sm:py-16">
         <div className="max-w-2xl mx-auto px-4 sm:px-6">
-          <button onClick={() => setShowLeaderboard(false)} className="flex items-center gap-2 text-muted-foreground hover:text-foreground mb-8 text-sm font-medium">
-            ← Back to Quiz Menu
-          </button>
-          <div className="flex items-center gap-3 mb-8">
-            <Medal className="w-8 h-8 text-accent" />
-            <h1 className="text-3xl font-serif font-bold text-foreground">Leaderboard</h1>
-          </div>
+          <button onClick={() => setShowLeaderboard(false)} className="flex items-center gap-2 text-muted-foreground hover:text-foreground mb-8 text-sm font-medium">← Back to Quiz Menu</button>
+          <div className="flex items-center gap-3 mb-8"><Medal className="w-8 h-8 text-accent" /><h1 className="text-3xl font-serif font-bold text-foreground">Leaderboard</h1></div>
           <div className="space-y-3">
             {mockLeaderboard.map((entry, i) => (
               <div key={entry.name} className={`flex items-center gap-4 rounded-xl bg-card border border-border p-4 shadow-card ${i < 3 ? "border-accent/30" : ""}`}>
-                <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm ${
-                  i === 0 ? "bg-accent/20 text-accent" : i === 1 ? "bg-secondary text-muted-foreground" : i === 2 ? "bg-accent/10 text-accent-foreground" : "bg-secondary text-muted-foreground"
-                }`}>
-                  {i + 1}
-                </div>
-                <div className="flex-1">
-                  <p className="font-medium text-foreground">{entry.name}</p>
-                  <p className="text-xs text-muted-foreground">{entry.streak} day streak</p>
-                </div>
+                <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm ${i === 0 ? "bg-accent/20 text-accent" : "bg-secondary text-muted-foreground"}`}>{i + 1}</div>
+                <div className="flex-1"><p className="font-medium text-foreground">{entry.name}</p><p className="text-xs text-muted-foreground">{entry.streak} day streak</p></div>
                 <p className="text-lg font-bold text-foreground">{entry.score}</p>
               </div>
             ))}
@@ -222,20 +416,18 @@ const TestPage = () => {
     );
   }
 
+  // Menu
   if (mode === "menu") {
     return (
       <div className="min-h-screen py-12 sm:py-16">
         <div className="max-w-4xl mx-auto px-4 sm:px-6">
-          {/* Disclaimer */}
           <div className="rounded-xl bg-accent/10 border border-accent/20 p-4 mb-8 flex items-start gap-3">
             <AlertTriangle className="w-4 h-4 text-accent shrink-0 mt-0.5" />
-            <p className="text-xs text-accent-foreground">This quiz is for educational purposes only and does not constitute financial advice. Test your knowledge and learn at your own pace.</p>
+            <p className="text-xs text-accent-foreground">This quiz is for educational purposes only and does not constitute financial advice.</p>
           </div>
 
           <div className="text-center mb-10">
-            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary/10 text-primary text-sm font-medium mb-4">
-              <Brain className="w-3.5 h-3.5" /> Test Your Knowledge
-            </span>
+            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary/10 text-primary text-sm font-medium mb-4"><Brain className="w-3.5 h-3.5" /> Test Your Knowledge</span>
             <h1 className="text-3xl sm:text-4xl font-serif font-bold text-foreground mb-3">Investment Quiz</h1>
             <p className="text-muted-foreground">Challenge yourself and learn something new with every question!</p>
           </div>
@@ -244,30 +436,36 @@ const TestPage = () => {
             {/* Daily Quiz */}
             <button onClick={() => !dailyCompleted && startQuiz("daily")} disabled={dailyCompleted}
               className={`text-left rounded-xl bg-card border border-border p-6 shadow-card transition-all ${dailyCompleted ? "opacity-60" : "hover:shadow-elevated hover:-translate-y-1"}`}>
-              <Sparkles className="w-8 h-8 text-accent mb-3" />
+              <div className="flex items-center justify-between mb-3">
+                <Sparkles className="w-8 h-8 text-accent" />
+                {dailyStreak > 0 && <span className="text-xs font-bold text-accent bg-accent/10 px-2 py-1 rounded-full flex items-center gap-1"><Flame className="w-3 h-3" />{dailyStreak} day streak</span>}
+              </div>
               <h3 className="font-serif font-bold text-lg text-foreground mb-1">Daily Quiz</h3>
-              <p className="text-sm text-muted-foreground">{dailyCompleted ? "✅ Completed today! Come back tomorrow." : "One question per day. Build your streak!"}</p>
+              <p className="text-sm text-muted-foreground">{dailyCompleted ? "✅ Completed today! Come back tomorrow." : "5 questions per day. Build your streak!"}</p>
             </button>
+
             {/* Timed Challenge */}
             <button onClick={() => startQuiz("timed")}
               className="text-left rounded-xl bg-card border border-border p-6 shadow-card hover:shadow-elevated hover:-translate-y-1 transition-all">
-              <Clock className="w-8 h-8 text-destructive mb-3" />
+              <div className="flex items-center justify-between mb-3">
+                <Zap className="w-8 h-8 text-destructive" />
+                <div className="flex gap-2">
+                  {timedPersonalBest !== null && <span className="text-xs bg-accent/10 text-accent-foreground px-2 py-1 rounded-full">PB: {timedPersonalBest}s</span>}
+                  {timedWinStreak > 0 && <span className="text-xs bg-primary/10 text-primary px-2 py-1 rounded-full">{timedWinStreak}W</span>}
+                </div>
+              </div>
               <h3 className="font-serif font-bold text-lg text-foreground mb-1">Timed Challenge</h3>
-              <p className="text-sm text-muted-foreground">10 questions, 2 minutes. Can you beat the clock?</p>
+              <p className="text-sm text-muted-foreground">1 question, 2 minutes. Beat the clock!</p>
             </button>
+
             {/* Topic Quiz */}
             <div className="rounded-xl bg-card border border-border p-6 shadow-card sm:col-span-2">
-              <div className="flex items-center gap-2 mb-4">
-                <Filter className="w-5 h-5 text-primary" />
-                <h3 className="font-serif font-bold text-lg text-foreground">Topic Quiz</h3>
-              </div>
-              <p className="text-sm text-muted-foreground mb-4">Choose a topic and test your knowledge specifically on that subject.</p>
+              <div className="flex items-center gap-2 mb-4"><Filter className="w-5 h-5 text-primary" /><h3 className="font-serif font-bold text-lg text-foreground">Topic Quiz</h3></div>
+              <p className="text-sm text-muted-foreground mb-4">Choose a topic and difficulty to test your knowledge.</p>
               <div className="flex flex-wrap gap-2 mb-4">
-                {topicOptions.map((t) => (
+                {topicOptions.map(t => (
                   <button key={t.value} onClick={() => setTopicFilter(t.value)}
-                    className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
-                      topicFilter === t.value ? "bg-primary text-primary-foreground" : "bg-secondary text-secondary-foreground hover:bg-secondary/80"
-                    }`}>
+                    className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${topicFilter === t.value ? "bg-primary text-primary-foreground" : "bg-secondary text-secondary-foreground hover:bg-secondary/80"}`}>
                     {t.label}
                   </button>
                 ))}
@@ -288,7 +486,9 @@ const TestPage = () => {
     );
   }
 
+  // Complete screen (daily & topic quiz)
   if (mode === "complete") {
+    const coveredTopics = [...new Set(questions.map(q => q.topic))];
     return (
       <div className="min-h-screen py-12 sm:py-16">
         <div className="max-w-2xl mx-auto px-4 sm:px-6">
@@ -297,7 +497,9 @@ const TestPage = () => {
             <div className="w-20 h-20 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-6">
               <Trophy className="w-10 h-10 text-primary" />
             </div>
-            <h2 className="text-3xl font-serif font-bold text-foreground mb-2">Quiz Complete!</h2>
+            <h2 className="text-3xl font-serif font-bold text-foreground mb-2">
+              {dailyCompleted && questions.length === DAILY_QUESTIONS_COUNT ? "Daily Quiz Complete!" : "Quiz Complete!"}
+            </h2>
             <p className="text-4xl font-bold text-primary mb-2">{score}/{questions.length}</p>
             <p className="text-muted-foreground mb-2">
               {score === questions.length ? "Perfect score! You're an investment genius! 🎉"
@@ -305,29 +507,33 @@ const TestPage = () => {
                 : score >= questions.length * 0.5 ? "Good effort! Keep learning and you'll master it! 📚"
                 : "Every expert was once a beginner. Keep going! 🌱"}
             </p>
-            {bestStreak > 1 && <p className="text-sm text-accent font-medium mb-4">Best streak: {bestStreak} in a row! 🔥</p>}
+            {bestStreak > 1 && <p className="text-sm text-accent font-medium mb-2">Best streak: {bestStreak} in a row! 🔥</p>}
+
+            {/* Topics covered */}
+            <div className="flex flex-wrap justify-center gap-1.5 mb-4">
+              {coveredTopics.map(t => <span key={t} className="text-xs bg-secondary text-secondary-foreground px-2 py-0.5 rounded-full">{t}</span>)}
+            </div>
+
+            {dailyCompleted && (
+              <div className="bg-accent/10 rounded-lg p-4 mb-4">
+                <p className="text-sm text-foreground flex items-center justify-center gap-1.5"><Flame className="w-4 h-4 text-accent" /> {dailyStreak} day streak — keep it going, come back tomorrow!</p>
+              </div>
+            )}
+
             <div className="flex gap-3 justify-center flex-wrap">
               <button onClick={() => setMode("menu")}
                 className="inline-flex items-center gap-2 px-6 py-3 rounded-lg bg-hero-gradient text-primary-foreground font-medium text-sm shadow-soft">
                 <RotateCcw className="w-4 h-4" /> Back to Menu
               </button>
-              <button
-                onClick={() => {
-                  const text = `I scored ${score}/${questions.length} on InvestWise! 📈 Test your investing knowledge too!`;
-                  if (navigator.share) {
-                    navigator.share({ title: "InvestWise Quiz Score", text });
-                  } else {
-                    navigator.clipboard.writeText(text);
-                    alert("Score copied to clipboard!");
-                  }
-                }}
-                className="inline-flex items-center gap-2 px-6 py-3 rounded-lg bg-secondary text-secondary-foreground font-medium text-sm hover:bg-secondary/80 transition-colors">
+              <button onClick={() => {
+                const text = `I scored ${score}/${questions.length} on InvestWise! 📈 Test your investing knowledge too!`;
+                if (navigator.share) { navigator.share({ title: "InvestWise Quiz Score", text }); } else { navigator.clipboard.writeText(text); alert("Score copied to clipboard!"); }
+              }} className="inline-flex items-center gap-2 px-6 py-3 rounded-lg bg-secondary text-secondary-foreground font-medium text-sm hover:bg-secondary/80 transition-colors">
                 <Share2 className="w-4 h-4" /> Share Score
               </button>
             </div>
           </motion.div>
 
-          {/* Wrong answers review */}
           {wrongAnswers.length > 0 && (
             <div>
               <h3 className="font-serif font-bold text-lg text-foreground mb-4 flex items-center gap-2">
@@ -353,41 +559,50 @@ const TestPage = () => {
     );
   }
 
+  // Active quiz / timed question
   return (
     <div className="min-h-screen py-12 sm:py-16">
       <div className="max-w-2xl mx-auto px-4 sm:px-6">
         {/* Stats bar */}
         <div className="flex items-center justify-center gap-4 sm:gap-6 mb-6 flex-wrap">
-          <div className="flex items-center gap-1.5 text-sm">
-            <Trophy className="w-4 h-4 text-accent" />
-            <span className="font-medium text-foreground">{score}/{answered}</span>
-            <span className="text-muted-foreground">correct</span>
-          </div>
-          <div className="flex items-center gap-1.5 text-sm">
-            <Flame className="w-4 h-4 text-destructive" />
-            <span className="font-medium text-foreground">{streak}</span>
-            <span className="text-muted-foreground">streak</span>
-          </div>
+          {mode !== "timed" && (
+            <>
+              <div className="flex items-center gap-1.5 text-sm">
+                <Trophy className="w-4 h-4 text-accent" />
+                <span className="font-medium text-foreground">{score}/{answered}</span>
+                <span className="text-muted-foreground">correct</span>
+              </div>
+              <div className="flex items-center gap-1.5 text-sm">
+                <Flame className="w-4 h-4 text-destructive" />
+                <span className="font-medium text-foreground">{streak}</span>
+                <span className="text-muted-foreground">streak</span>
+              </div>
+            </>
+          )}
           {mode === "timed" && (
-            <div className={`flex items-center gap-1.5 text-sm ${timeLeft < 30 ? "text-destructive" : ""}`}>
-              <Clock className="w-4 h-4" />
-              <span className="font-medium">{Math.floor(timeLeft / 60)}:{(timeLeft % 60).toString().padStart(2, "0")}</span>
+            <div className={`flex items-center gap-2 text-lg font-bold ${timeLeft < 30 ? "text-destructive animate-pulse" : "text-foreground"}`}>
+              <Clock className="w-5 h-5" />
+              <span>{Math.floor(timeLeft / 60)}:{(timeLeft % 60).toString().padStart(2, "0")}</span>
             </div>
           )}
         </div>
 
-        {/* Progress bar */}
-        <div className="w-full h-2 rounded-full bg-secondary mb-8">
-          <motion.div className="h-full rounded-full bg-hero-gradient" initial={{ width: 0 }}
-            animate={{ width: `${((currentIndex + (showResult ? 1 : 0)) / questions.length) * 100}%` }} transition={{ duration: 0.4 }} />
-        </div>
+        {/* Progress bar (not for timed) */}
+        {mode !== "timed" && (
+          <div className="w-full h-2 rounded-full bg-secondary mb-8">
+            <motion.div className="h-full rounded-full bg-hero-gradient" initial={{ width: 0 }}
+              animate={{ width: `${((currentIndex + (showResult ? 1 : 0)) / questions.length) * 100}%` }} transition={{ duration: 0.4 }} />
+          </div>
+        )}
 
         <AnimatePresence mode="wait">
           {currentQ && (
             <motion.div key={currentQ.id} initial={{ opacity: 0, x: 30 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -30 }}
               className="rounded-2xl bg-card border border-border p-6 sm:p-8 shadow-card">
               <div className="flex items-center justify-between mb-6">
-                <span className="text-sm text-muted-foreground">Question {currentIndex + 1} of {questions.length}</span>
+                <span className="text-sm text-muted-foreground">
+                  {mode === "timed" ? "Timed Challenge" : `Question ${currentIndex + 1} of ${questions.length}`}
+                </span>
                 <span className={`text-xs font-medium px-2.5 py-1 rounded-full ${difficultyColors[currentQ.difficulty]}`}>
                   {currentQ.difficulty}
                 </span>
@@ -429,7 +644,7 @@ const TestPage = () => {
                     </div>
                     <button onClick={nextQuestion}
                       className="mt-4 w-full inline-flex items-center justify-center gap-2 px-6 py-3 rounded-lg bg-hero-gradient text-primary-foreground font-medium text-sm shadow-soft hover:shadow-elevated transition-all">
-                      {currentIndex + 1 >= questions.length ? "See Results" : "Next Question"} <ArrowRight className="w-4 h-4" />
+                      {mode === "timed" ? "See Result" : currentIndex + 1 >= questions.length ? "See Results" : "Next Question"} <ArrowRight className="w-4 h-4" />
                     </button>
                   </motion.div>
                 )}
