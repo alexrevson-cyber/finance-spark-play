@@ -122,6 +122,7 @@ const HomePage = () => {
   const [streakData, setStreakData] = useState({ current_streak: 0, best_streak: 0 });
   const [lessonsCompleted, setLessonsCompleted] = useState(0);
   const [lastQuizScore, setLastQuizScore] = useState<string>("—");
+  const dailyQuizDone = typeof window !== "undefined" && !!localStorage.getItem(`daily_quiz_${new Date().toISOString().slice(0, 10)}`);
 
   useEffect(() => {
     if (!user) return;
