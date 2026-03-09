@@ -596,9 +596,20 @@ const TestPage = () => {
             </>
           )}
           {mode === "timed" && (
-            <div className={`flex items-center gap-2 text-lg font-bold ${timeLeft < 30 ? "text-destructive animate-pulse" : "text-foreground"}`}>
-              <Clock className="w-5 h-5" />
-              <span>{Math.floor(timeLeft / 60)}:{(timeLeft % 60).toString().padStart(2, "0")}</span>
+            <div className="flex items-center gap-4 sm:gap-6">
+              <div className={`flex items-center gap-2 text-lg font-bold ${timeLeft < 30 ? "text-destructive animate-pulse" : "text-foreground"}`}>
+                <Clock className="w-5 h-5" />
+                <span>{Math.floor(timeLeft / 60)}:{(timeLeft % 60).toString().padStart(2, "0")}</span>
+              </div>
+              <div className="flex items-center gap-1.5 text-sm">
+                <Trophy className="w-4 h-4 text-accent" />
+                <span className="font-medium text-foreground">{timedScore}</span>
+                <span className="text-muted-foreground">correct</span>
+              </div>
+              <div className="flex items-center gap-1.5 text-sm">
+                <span className="font-medium text-foreground">{timedTotal}</span>
+                <span className="text-muted-foreground">answered</span>
+              </div>
             </div>
           )}
         </div>
