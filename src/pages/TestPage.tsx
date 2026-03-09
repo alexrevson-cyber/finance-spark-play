@@ -472,7 +472,7 @@ const TestPage = () => {
                 </div>
               </div>
               <h3 className="font-serif font-bold text-lg text-foreground mb-1">Timed Challenge</h3>
-              <p className="text-sm text-muted-foreground">1 question, 2 minutes. Beat the clock!</p>
+              <p className="text-sm text-muted-foreground">Answer as many as you can in 2 minutes!</p>
             </button>
 
             {/* Topic Quiz */}
