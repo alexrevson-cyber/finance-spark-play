@@ -233,19 +233,8 @@ const TestPage = () => {
       fireConfetti();
 
       if (mode === "timed") {
-        clearInterval(timerRef.current!);
-        const elapsed = Math.round((Date.now() - timedStartRef.current) / 1000);
-        setTimedAnswerTime(elapsed);
-        // Update personal best
-        const pb = timedPersonalBest;
-        if (pb === null || elapsed < pb) {
-          setTimedPersonalBest(elapsed);
-          localStorage.setItem("timed_pb", String(elapsed));
-        }
-        const newWinStreak = timedWinStreak + 1;
-        setTimedWinStreak(newWinStreak);
-        localStorage.setItem("timed_win_streak", String(newWinStreak));
-        // Track seen
+        setTimedScore(s => s + 1);
+        setTimedTotal(t => t + 1);
         const seenIds = getSeenTimedIds();
         saveSeenTimedIds([...seenIds, q.id]);
       }
@@ -253,9 +242,8 @@ const TestPage = () => {
       setStreak(0);
       setWrongAnswers(w => [...w, { q, selectedIdx: index }]);
       if (mode === "timed") {
-        clearInterval(timerRef.current!);
-        setTimedWinStreak(0);
-        localStorage.setItem("timed_win_streak", "0");
+        setTimedTotal(t => t + 1);
+        setTimedWrongAnswers(w => [...w, { q, selectedIdx: index }]);
         const seenIds = getSeenTimedIds();
         saveSeenTimedIds([...seenIds, q.id]);
       }
