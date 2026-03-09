@@ -143,14 +143,14 @@ const TestPage = () => {
     setTimedWinStreak(parseInt(localStorage.getItem("timed_win_streak") || "0", 10));
   }, []);
 
-  // Timer for timed mode
+  // Timer for timed mode — counts down, ends challenge when 0
   useEffect(() => {
-    if (mode === "timed" && timeLeft > 0 && !showResult) {
+    if (mode === "timed" && timeLeft > 0) {
       timerRef.current = setInterval(() => {
         setTimeLeft(t => {
           if (t <= 1) {
             clearInterval(timerRef.current!);
-            setMode("timed-result");
+            setMode("timed-complete");
             return 0;
           }
           return t - 1;
@@ -158,7 +158,7 @@ const TestPage = () => {
       }, 1000);
       return () => clearInterval(timerRef.current!);
     }
-  }, [mode, showResult, timeLeft]);
+  }, [mode, timeLeft]);
 
   const fireConfetti = useCallback(() => {
     confetti({ particleCount: 80, spread: 70, origin: { y: 0.6 }, colors: ["#2d7a5f", "#d4a017", "#f0c040", "#4ade80"] });
