@@ -125,12 +125,13 @@ const TestPage = () => {
   const [showLeaderboard, setShowLeaderboard] = useState(false);
   const [dailyCompleted, setDailyCompleted] = useState(false);
   const [dailyStreak, setDailyStreak] = useState(0);
-  const [timedAnswerTime, setTimedAnswerTime] = useState(0);
+  const [timedScore, setTimedScore] = useState(0);
+  const [timedTotal, setTimedTotal] = useState(0);
   const [timedPersonalBest, setTimedPersonalBest] = useState<number | null>(null);
   const [timedWinStreak, setTimedWinStreak] = useState(0);
   const [showTimedLeaderboard, setShowTimedLeaderboard] = useState(false);
+  const [timedWrongAnswers, setTimedWrongAnswers] = useState<{ q: Question; selectedIdx: number }[]>([]);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  const timedStartRef = useRef(0);
   const { user } = useAuth();
 
   // Load daily quiz state & streak
