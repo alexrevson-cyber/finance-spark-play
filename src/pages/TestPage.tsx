@@ -177,7 +177,7 @@ const TestPage = () => {
     return shuffled.slice(0, DAILY_QUESTIONS_COUNT);
   };
 
-  const pickTimedQuestion = (): Question => {
+  const pickTimedQuestions = (): Question[] => {
     const pool = allQuestions.filter(q => q.difficulty === "intermediate" || q.difficulty === "advanced");
     const seenIds = getSeenTimedIds();
     let unseen = pool.filter(q => !seenIds.includes(q.id));
@@ -185,8 +185,7 @@ const TestPage = () => {
       saveSeenTimedIds([]);
       unseen = [...pool];
     }
-    const shuffled = unseen.sort(() => Math.random() - 0.5);
-    return shuffled[0];
+    return unseen.sort(() => Math.random() - 0.5);
   };
 
   const startQuiz = (quizMode: "quiz" | "timed" | "daily", topic = "all") => {
