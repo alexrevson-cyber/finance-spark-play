@@ -467,8 +467,7 @@ const TestPage = () => {
               <div className="flex items-center justify-between mb-3">
                 <Zap className="w-8 h-8 text-destructive" />
                 <div className="flex gap-2">
-                  {timedPersonalBest !== null && <span className="text-xs bg-accent/10 text-accent-foreground px-2 py-1 rounded-full">PB: {timedPersonalBest}s</span>}
-                  {timedWinStreak > 0 && <span className="text-xs bg-primary/10 text-primary px-2 py-1 rounded-full">{timedWinStreak}W</span>}
+                  {timedPersonalBest !== null && <span className="text-xs bg-accent/10 text-accent-foreground px-2 py-1 rounded-full">Best: {timedPersonalBest}</span>}
                 </div>
               </div>
               <h3 className="font-serif font-bold text-lg text-foreground mb-1">Timed Challenge</h3>
