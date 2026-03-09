@@ -319,53 +319,41 @@ const TestPage = () => {
 
   const currentQ = questions[currentIndex];
 
-  // Timed result screen
-  if (mode === "timed-result") {
-    const correct = selected !== null && questions[0] && selected === questions[0].correct;
-    const q = questions[0];
+  // Timed challenge complete screen
+  if (mode === "timed-complete") {
+    const pct = timedTotal > 0 ? Math.round((timedScore / timedTotal) * 100) : 0;
     return (
       <div className="min-h-screen py-12 sm:py-16">
         <div className="max-w-2xl mx-auto px-4 sm:px-6">
           <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}
             className="text-center rounded-2xl bg-card border border-border p-10 shadow-card mb-8">
-            {correct ? (
-              <>
-                <div className="w-20 h-20 rounded-full bg-success/10 flex items-center justify-center mx-auto mb-6">
-                  <CheckCircle2 className="w-10 h-10 text-success" />
+            <div className="w-20 h-20 rounded-full bg-accent/10 flex items-center justify-center mx-auto mb-6">
+              <Clock className="w-10 h-10 text-accent" />
+            </div>
+            <h2 className="text-3xl font-serif font-bold text-foreground mb-2">Time's Up! ⏰</h2>
+            <p className="text-5xl font-bold text-primary my-4">{timedScore}/{timedTotal}</p>
+            <p className="text-muted-foreground mb-1">
+              You answered <span className="font-bold text-foreground">{timedTotal}</span> questions in 2 minutes
+              — <span className="font-bold text-foreground">{timedScore}</span> correct ({pct}%)
+            </p>
+            <p className="text-sm text-muted-foreground mb-6">
+              {timedScore >= 10 ? "Incredible speed and accuracy! 🔥" :
+               timedScore >= 7 ? "Great performance — you're sharp! 💪" :
+               timedScore >= 4 ? "Solid effort — keep practicing! 📚" :
+               "Every round makes you faster. Try again! 🌱"}
+            </p>
+            <div className="flex justify-center gap-4 text-sm mb-6">
+              {timedPersonalBest !== null && (
+                <div className="bg-accent/10 px-4 py-2 rounded-lg">
+                  <p className="text-xs text-muted-foreground">Personal Best</p>
+                  <p className="font-bold text-foreground">{timedPersonalBest} correct</p>
                 </div>
-                <h2 className="text-3xl font-serif font-bold text-foreground mb-2">Well Done! 🎉</h2>
-                <p className="text-muted-foreground mb-2">You answered in <span className="font-bold text-foreground">{timedAnswerTime}s</span> with {TIMED_SECONDS - timedAnswerTime}s remaining!</p>
-                <p className="text-sm text-muted-foreground mb-4">{q?.explanation}</p>
-                <div className="flex justify-center gap-4 text-sm mb-6">
-                  {timedPersonalBest !== null && <div className="bg-accent/10 px-4 py-2 rounded-lg"><p className="text-xs text-muted-foreground">Personal Best</p><p className="font-bold text-foreground">{timedPersonalBest}s</p></div>}
-                  <div className="bg-primary/10 px-4 py-2 rounded-lg"><p className="text-xs text-muted-foreground">Win Streak</p><p className="font-bold text-foreground">{timedWinStreak}</p></div>
-                </div>
-              </>
-            ) : timeLeft <= 0 && selected === null ? (
-              <>
-                <div className="w-20 h-20 rounded-full bg-accent/10 flex items-center justify-center mx-auto mb-6">
-                  <Clock className="w-10 h-10 text-accent" />
-                </div>
-                <h2 className="text-3xl font-serif font-bold text-foreground mb-2">Time's Up! ⏰</h2>
-                <p className="text-muted-foreground mb-2">So close — try again!</p>
-                {q && <p className="text-sm text-foreground mb-2"><strong>Correct answer:</strong> {q.options[q.correct]}</p>}
-                {q && <p className="text-sm text-muted-foreground mb-4">{q.explanation}</p>}
-              </>
-            ) : (
-              <>
-                <div className="w-20 h-20 rounded-full bg-destructive/10 flex items-center justify-center mx-auto mb-6">
-                  <XCircle className="w-10 h-10 text-destructive" />
-                </div>
-                <h2 className="text-3xl font-serif font-bold text-foreground mb-2">Not quite! 💪</h2>
-                <p className="text-muted-foreground mb-2">So close — try again!</p>
-                {q && <p className="text-sm text-foreground mb-2"><strong>Correct answer:</strong> {q.options[q.correct]}</p>}
-                {q && <p className="text-sm text-muted-foreground mb-4">{q.explanation}</p>}
-              </>
-            )}
+              )}
+            </div>
             <div className="flex gap-3 justify-center flex-wrap">
               <button onClick={() => startQuiz("timed")}
                 className="inline-flex items-center gap-2 px-6 py-3 rounded-lg bg-hero-gradient text-primary-foreground font-medium text-sm shadow-soft">
-                <Zap className="w-4 h-4" /> New Challenge
+                <Zap className="w-4 h-4" /> Try Again
               </button>
               <button onClick={() => setMode("menu")}
                 className="inline-flex items-center gap-2 px-6 py-3 rounded-lg bg-secondary text-secondary-foreground font-medium text-sm">
@@ -377,6 +365,27 @@ const TestPage = () => {
               </button>
             </div>
           </motion.div>
+
+          {timedWrongAnswers.length > 0 && (
+            <div>
+              <h3 className="font-serif font-bold text-lg text-foreground mb-4 flex items-center gap-2">
+                <BookOpen className="w-5 h-5 text-primary" /> Review Missed Questions
+              </h3>
+              <div className="space-y-4">
+                {timedWrongAnswers.map(({ q, selectedIdx }) => (
+                  <div key={q.id} className="rounded-xl bg-card border border-border p-5 shadow-card">
+                    <p className="font-medium text-foreground mb-2">{q.question}</p>
+                    <p className="text-sm text-destructive mb-1">Your answer: {q.options[selectedIdx]}</p>
+                    <p className="text-sm text-success mb-2">Correct answer: {q.options[q.correct]}</p>
+                    <p className="text-sm text-muted-foreground mb-3">{q.explanation}</p>
+                    <Link to="/learn" className="text-xs text-primary font-medium hover:underline flex items-center gap-1">
+                      <Link2 className="w-3 h-3" /> Learn more about this topic
+                    </Link>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       </div>
     );
@@ -389,13 +398,13 @@ const TestPage = () => {
         <div className="max-w-2xl mx-auto px-4 sm:px-6">
           <button onClick={() => setShowTimedLeaderboard(false)} className="flex items-center gap-2 text-muted-foreground hover:text-foreground mb-8 text-sm font-medium">← Back</button>
           <div className="flex items-center gap-3 mb-8"><Timer className="w-8 h-8 text-accent" /><h1 className="text-3xl font-serif font-bold text-foreground">Timed Challenge Leaderboard</h1></div>
-          <p className="text-sm text-muted-foreground mb-6">Fastest correct answers</p>
+          <p className="text-sm text-muted-foreground mb-6">Most correct answers in 2 minutes</p>
           <div className="space-y-3">
             {mockTimedLeaderboard.map((e, i) => (
               <div key={e.name} className={`flex items-center gap-4 rounded-xl bg-card border border-border p-4 shadow-card ${i < 3 ? "border-accent/30" : ""}`}>
                 <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm ${i === 0 ? "bg-accent/20 text-accent" : "bg-secondary text-muted-foreground"}`}>{i + 1}</div>
-                <div className="flex-1"><p className="font-medium text-foreground">{e.name}</p><p className="text-xs text-muted-foreground">{e.streak} win streak</p></div>
-                <p className="text-lg font-bold text-foreground">{e.time}s</p>
+                <div className="flex-1"><p className="font-medium text-foreground">{e.name}</p><p className="text-xs text-muted-foreground">{e.streak} game streak</p></div>
+                <p className="text-lg font-bold text-foreground">{e.score} correct</p>
               </div>
             ))}
           </div>
