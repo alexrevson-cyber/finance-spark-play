@@ -93,7 +93,7 @@ const difficultyColors = {
   advanced: "bg-destructive/10 text-destructive",
 };
 
-type QuizMode = "menu" | "quiz" | "daily" | "timed" | "complete" | "timed-result";
+type QuizMode = "menu" | "quiz" | "daily" | "timed" | "complete" | "timed-result" | "timed-complete";
 
 const DAILY_QUESTIONS_COUNT = 5;
 const TIMED_SECONDS = 120;
