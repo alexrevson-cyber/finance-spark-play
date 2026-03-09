@@ -80,11 +80,11 @@ const mockLeaderboard = [
 ];
 
 const mockTimedLeaderboard = [
-  { name: "SpeedTrader", time: 12, streak: 8 },
-  { name: "QuickMind", time: 18, streak: 6 },
-  { name: "FlashInvestor", time: 22, streak: 5 },
-  { name: "RapidRecall", time: 25, streak: 4 },
-  { name: "SwiftAnalyst", time: 31, streak: 3 },
+  { name: "SpeedTrader", score: 14, streak: 8 },
+  { name: "QuickMind", score: 12, streak: 6 },
+  { name: "FlashInvestor", score: 11, streak: 5 },
+  { name: "RapidRecall", score: 10, streak: 4 },
+  { name: "SwiftAnalyst", score: 9, streak: 3 },
 ];
 
 const difficultyColors = {
@@ -93,7 +93,7 @@ const difficultyColors = {
   advanced: "bg-destructive/10 text-destructive",
 };
 
-type QuizMode = "menu" | "quiz" | "daily" | "timed" | "complete" | "timed-result";
+type QuizMode = "menu" | "quiz" | "daily" | "timed" | "complete" | "timed-result" | "timed-complete";
 
 const DAILY_QUESTIONS_COUNT = 5;
 const TIMED_SECONDS = 120;
@@ -125,12 +125,13 @@ const TestPage = () => {
   const [showLeaderboard, setShowLeaderboard] = useState(false);
   const [dailyCompleted, setDailyCompleted] = useState(false);
   const [dailyStreak, setDailyStreak] = useState(0);
-  const [timedAnswerTime, setTimedAnswerTime] = useState(0);
+  const [timedScore, setTimedScore] = useState(0);
+  const [timedTotal, setTimedTotal] = useState(0);
   const [timedPersonalBest, setTimedPersonalBest] = useState<number | null>(null);
   const [timedWinStreak, setTimedWinStreak] = useState(0);
   const [showTimedLeaderboard, setShowTimedLeaderboard] = useState(false);
+  const [timedWrongAnswers, setTimedWrongAnswers] = useState<{ q: Question; selectedIdx: number }[]>([]);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  const timedStartRef = useRef(0);
   const { user } = useAuth();
 
   // Load daily quiz state & streak
@@ -138,18 +139,18 @@ const TestPage = () => {
     const key = `daily_quiz_${new Date().toISOString().slice(0, 10)}`;
     if (localStorage.getItem(key)) setDailyCompleted(true);
     setDailyStreak(parseInt(localStorage.getItem("daily_streak") || "0", 10));
-    setTimedPersonalBest(localStorage.getItem("timed_pb") ? parseFloat(localStorage.getItem("timed_pb")!) : null);
+    setTimedPersonalBest(localStorage.getItem("timed_pb") ? parseInt(localStorage.getItem("timed_pb")!) : null);
     setTimedWinStreak(parseInt(localStorage.getItem("timed_win_streak") || "0", 10));
   }, []);
 
-  // Timer for timed mode
+  // Timer for timed mode — counts down, ends challenge when 0
   useEffect(() => {
-    if (mode === "timed" && timeLeft > 0 && !showResult) {
+    if (mode === "timed" && timeLeft > 0) {
       timerRef.current = setInterval(() => {
         setTimeLeft(t => {
           if (t <= 1) {
             clearInterval(timerRef.current!);
-            setMode("timed-result");
+            setMode("timed-complete");
             return 0;
           }
           return t - 1;
@@ -157,7 +158,7 @@ const TestPage = () => {
       }, 1000);
       return () => clearInterval(timerRef.current!);
     }
-  }, [mode, showResult, timeLeft]);
+  }, [mode, timeLeft]);
 
   const fireConfetti = useCallback(() => {
     confetti({ particleCount: 80, spread: 70, origin: { y: 0.6 }, colors: ["#2d7a5f", "#d4a017", "#f0c040", "#4ade80"] });
@@ -176,7 +177,7 @@ const TestPage = () => {
     return shuffled.slice(0, DAILY_QUESTIONS_COUNT);
   };
 
-  const pickTimedQuestion = (): Question => {
+  const pickTimedQuestions = (): Question[] => {
     const pool = allQuestions.filter(q => q.difficulty === "intermediate" || q.difficulty === "advanced");
     const seenIds = getSeenTimedIds();
     let unseen = pool.filter(q => !seenIds.includes(q.id));
@@ -184,8 +185,7 @@ const TestPage = () => {
       saveSeenTimedIds([]);
       unseen = [...pool];
     }
-    const shuffled = unseen.sort(() => Math.random() - 0.5);
-    return shuffled[0];
+    return unseen.sort(() => Math.random() - 0.5);
   };
 
   const startQuiz = (quizMode: "quiz" | "timed" | "daily", topic = "all") => {
@@ -194,7 +194,7 @@ const TestPage = () => {
     if (quizMode === "daily") {
       filtered = pickDailyQuestions();
     } else if (quizMode === "timed") {
-      filtered = [pickTimedQuestion()];
+      filtered = pickTimedQuestions();
     } else {
       filtered = topic === "all" ? [...allQuestions] : allQuestions.filter(q => q.topic === topic);
       filtered = filtered.sort(() => Math.random() - 0.5).slice(0, 10);
@@ -209,10 +209,12 @@ const TestPage = () => {
     setBestStreak(0);
     setShowResult(false);
     setWrongAnswers([]);
+    setTimedScore(0);
+    setTimedTotal(0);
+    setTimedWrongAnswers([]);
     setMode(quizMode);
     if (quizMode === "timed") {
       setTimeLeft(TIMED_SECONDS);
-      timedStartRef.current = Date.now();
     }
   };
 
@@ -231,19 +233,8 @@ const TestPage = () => {
       fireConfetti();
 
       if (mode === "timed") {
-        clearInterval(timerRef.current!);
-        const elapsed = Math.round((Date.now() - timedStartRef.current) / 1000);
-        setTimedAnswerTime(elapsed);
-        // Update personal best
-        const pb = timedPersonalBest;
-        if (pb === null || elapsed < pb) {
-          setTimedPersonalBest(elapsed);
-          localStorage.setItem("timed_pb", String(elapsed));
-        }
-        const newWinStreak = timedWinStreak + 1;
-        setTimedWinStreak(newWinStreak);
-        localStorage.setItem("timed_win_streak", String(newWinStreak));
-        // Track seen
+        setTimedScore(s => s + 1);
+        setTimedTotal(t => t + 1);
         const seenIds = getSeenTimedIds();
         saveSeenTimedIds([...seenIds, q.id]);
       }
@@ -251,9 +242,8 @@ const TestPage = () => {
       setStreak(0);
       setWrongAnswers(w => [...w, { q, selectedIdx: index }]);
       if (mode === "timed") {
-        clearInterval(timerRef.current!);
-        setTimedWinStreak(0);
-        localStorage.setItem("timed_win_streak", "0");
+        setTimedTotal(t => t + 1);
+        setTimedWrongAnswers(w => [...w, { q, selectedIdx: index }]);
         const seenIds = getSeenTimedIds();
         saveSeenTimedIds([...seenIds, q.id]);
       }
@@ -262,7 +252,16 @@ const TestPage = () => {
 
   const nextQuestion = () => {
     if (mode === "timed") {
-      setMode("timed-result");
+      // In timed mode, immediately go to next question (no end until timer expires)
+      if (currentIndex + 1 >= questions.length) {
+        // Exhausted pool, end early
+        clearInterval(timerRef.current!);
+        finishTimedChallenge();
+        return;
+      }
+      setCurrentIndex(i => i + 1);
+      setSelected(null);
+      setShowResult(false);
       return;
     }
 
@@ -273,24 +272,21 @@ const TestPage = () => {
         const today = new Date().toISOString().slice(0, 10);
         localStorage.setItem(`daily_quiz_${today}`, "true");
         setDailyCompleted(true);
-        // Mark seen IDs
         const seenIds = getSeenDailyIds();
         const newSeen = [...seenIds, ...questions.map(q => q.id)];
         saveSeenDailyIds(newSeen);
-        // Update streak
         const lastDate = localStorage.getItem("daily_last_date");
         const yesterday = new Date(Date.now() - 86400000).toISOString().slice(0, 10);
         let newStreak = 1;
         if (lastDate === yesterday) {
           newStreak = dailyStreak + 1;
         } else if (lastDate === today) {
-          newStreak = dailyStreak; // already counted
+          newStreak = dailyStreak;
         }
         setDailyStreak(newStreak);
         localStorage.setItem("daily_streak", String(newStreak));
         localStorage.setItem("daily_last_date", today);
 
-        // Save to DB
         if (user) {
           supabase.from("daily_streaks").upsert({ user_id: user.id, current_streak: newStreak, best_streak: Math.max(newStreak, dailyStreak), last_activity_date: today }, { onConflict: "user_id" });
         }
@@ -309,55 +305,55 @@ const TestPage = () => {
     }
   };
 
+  const finishTimedChallenge = () => {
+    // Update personal best (most correct answers)
+    const finalScore = timedScore + (selected !== null && questions[currentIndex] && selected === questions[currentIndex].correct ? 0 : 0);
+    // timedScore is already updated by handleSelect
+    const pb = timedPersonalBest;
+    if (pb === null || timedScore > pb) {
+      setTimedPersonalBest(timedScore);
+      localStorage.setItem("timed_pb", String(timedScore));
+    }
+    setMode("timed-complete");
+  };
+
   const currentQ = questions[currentIndex];
 
-  // Timed result screen
-  if (mode === "timed-result") {
-    const correct = selected !== null && questions[0] && selected === questions[0].correct;
-    const q = questions[0];
+  // Timed challenge complete screen
+  if (mode === "timed-complete") {
+    const pct = timedTotal > 0 ? Math.round((timedScore / timedTotal) * 100) : 0;
     return (
       <div className="min-h-screen py-12 sm:py-16">
         <div className="max-w-2xl mx-auto px-4 sm:px-6">
           <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}
             className="text-center rounded-2xl bg-card border border-border p-10 shadow-card mb-8">
-            {correct ? (
-              <>
-                <div className="w-20 h-20 rounded-full bg-success/10 flex items-center justify-center mx-auto mb-6">
-                  <CheckCircle2 className="w-10 h-10 text-success" />
+            <div className="w-20 h-20 rounded-full bg-accent/10 flex items-center justify-center mx-auto mb-6">
+              <Clock className="w-10 h-10 text-accent" />
+            </div>
+            <h2 className="text-3xl font-serif font-bold text-foreground mb-2">Time's Up! ⏰</h2>
+            <p className="text-5xl font-bold text-primary my-4">{timedScore}/{timedTotal}</p>
+            <p className="text-muted-foreground mb-1">
+              You answered <span className="font-bold text-foreground">{timedTotal}</span> questions in 2 minutes
+              — <span className="font-bold text-foreground">{timedScore}</span> correct ({pct}%)
+            </p>
+            <p className="text-sm text-muted-foreground mb-6">
+              {timedScore >= 10 ? "Incredible speed and accuracy! 🔥" :
+               timedScore >= 7 ? "Great performance — you're sharp! 💪" :
+               timedScore >= 4 ? "Solid effort — keep practicing! 📚" :
+               "Every round makes you faster. Try again! 🌱"}
+            </p>
+            <div className="flex justify-center gap-4 text-sm mb-6">
+              {timedPersonalBest !== null && (
+                <div className="bg-accent/10 px-4 py-2 rounded-lg">
+                  <p className="text-xs text-muted-foreground">Personal Best</p>
+                  <p className="font-bold text-foreground">{timedPersonalBest} correct</p>
                 </div>
-                <h2 className="text-3xl font-serif font-bold text-foreground mb-2">Well Done! 🎉</h2>
-                <p className="text-muted-foreground mb-2">You answered in <span className="font-bold text-foreground">{timedAnswerTime}s</span> with {TIMED_SECONDS - timedAnswerTime}s remaining!</p>
-                <p className="text-sm text-muted-foreground mb-4">{q?.explanation}</p>
-                <div className="flex justify-center gap-4 text-sm mb-6">
-                  {timedPersonalBest !== null && <div className="bg-accent/10 px-4 py-2 rounded-lg"><p className="text-xs text-muted-foreground">Personal Best</p><p className="font-bold text-foreground">{timedPersonalBest}s</p></div>}
-                  <div className="bg-primary/10 px-4 py-2 rounded-lg"><p className="text-xs text-muted-foreground">Win Streak</p><p className="font-bold text-foreground">{timedWinStreak}</p></div>
-                </div>
-              </>
-            ) : timeLeft <= 0 && selected === null ? (
-              <>
-                <div className="w-20 h-20 rounded-full bg-accent/10 flex items-center justify-center mx-auto mb-6">
-                  <Clock className="w-10 h-10 text-accent" />
-                </div>
-                <h2 className="text-3xl font-serif font-bold text-foreground mb-2">Time's Up! ⏰</h2>
-                <p className="text-muted-foreground mb-2">So close — try again!</p>
-                {q && <p className="text-sm text-foreground mb-2"><strong>Correct answer:</strong> {q.options[q.correct]}</p>}
-                {q && <p className="text-sm text-muted-foreground mb-4">{q.explanation}</p>}
-              </>
-            ) : (
-              <>
-                <div className="w-20 h-20 rounded-full bg-destructive/10 flex items-center justify-center mx-auto mb-6">
-                  <XCircle className="w-10 h-10 text-destructive" />
-                </div>
-                <h2 className="text-3xl font-serif font-bold text-foreground mb-2">Not quite! 💪</h2>
-                <p className="text-muted-foreground mb-2">So close — try again!</p>
-                {q && <p className="text-sm text-foreground mb-2"><strong>Correct answer:</strong> {q.options[q.correct]}</p>}
-                {q && <p className="text-sm text-muted-foreground mb-4">{q.explanation}</p>}
-              </>
-            )}
+              )}
+            </div>
             <div className="flex gap-3 justify-center flex-wrap">
               <button onClick={() => startQuiz("timed")}
                 className="inline-flex items-center gap-2 px-6 py-3 rounded-lg bg-hero-gradient text-primary-foreground font-medium text-sm shadow-soft">
-                <Zap className="w-4 h-4" /> New Challenge
+                <Zap className="w-4 h-4" /> Try Again
               </button>
               <button onClick={() => setMode("menu")}
                 className="inline-flex items-center gap-2 px-6 py-3 rounded-lg bg-secondary text-secondary-foreground font-medium text-sm">
@@ -369,6 +365,27 @@ const TestPage = () => {
               </button>
             </div>
           </motion.div>
+
+          {timedWrongAnswers.length > 0 && (
+            <div>
+              <h3 className="font-serif font-bold text-lg text-foreground mb-4 flex items-center gap-2">
+                <BookOpen className="w-5 h-5 text-primary" /> Review Missed Questions
+              </h3>
+              <div className="space-y-4">
+                {timedWrongAnswers.map(({ q, selectedIdx }) => (
+                  <div key={q.id} className="rounded-xl bg-card border border-border p-5 shadow-card">
+                    <p className="font-medium text-foreground mb-2">{q.question}</p>
+                    <p className="text-sm text-destructive mb-1">Your answer: {q.options[selectedIdx]}</p>
+                    <p className="text-sm text-success mb-2">Correct answer: {q.options[q.correct]}</p>
+                    <p className="text-sm text-muted-foreground mb-3">{q.explanation}</p>
+                    <Link to="/learn" className="text-xs text-primary font-medium hover:underline flex items-center gap-1">
+                      <Link2 className="w-3 h-3" /> Learn more about this topic
+                    </Link>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       </div>
     );
@@ -381,13 +398,13 @@ const TestPage = () => {
         <div className="max-w-2xl mx-auto px-4 sm:px-6">
           <button onClick={() => setShowTimedLeaderboard(false)} className="flex items-center gap-2 text-muted-foreground hover:text-foreground mb-8 text-sm font-medium">← Back</button>
           <div className="flex items-center gap-3 mb-8"><Timer className="w-8 h-8 text-accent" /><h1 className="text-3xl font-serif font-bold text-foreground">Timed Challenge Leaderboard</h1></div>
-          <p className="text-sm text-muted-foreground mb-6">Fastest correct answers</p>
+          <p className="text-sm text-muted-foreground mb-6">Most correct answers in 2 minutes</p>
           <div className="space-y-3">
             {mockTimedLeaderboard.map((e, i) => (
               <div key={e.name} className={`flex items-center gap-4 rounded-xl bg-card border border-border p-4 shadow-card ${i < 3 ? "border-accent/30" : ""}`}>
                 <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm ${i === 0 ? "bg-accent/20 text-accent" : "bg-secondary text-muted-foreground"}`}>{i + 1}</div>
-                <div className="flex-1"><p className="font-medium text-foreground">{e.name}</p><p className="text-xs text-muted-foreground">{e.streak} win streak</p></div>
-                <p className="text-lg font-bold text-foreground">{e.time}s</p>
+                <div className="flex-1"><p className="font-medium text-foreground">{e.name}</p><p className="text-xs text-muted-foreground">{e.streak} game streak</p></div>
+                <p className="text-lg font-bold text-foreground">{e.score} correct</p>
               </div>
             ))}
           </div>
@@ -450,12 +467,11 @@ const TestPage = () => {
               <div className="flex items-center justify-between mb-3">
                 <Zap className="w-8 h-8 text-destructive" />
                 <div className="flex gap-2">
-                  {timedPersonalBest !== null && <span className="text-xs bg-accent/10 text-accent-foreground px-2 py-1 rounded-full">PB: {timedPersonalBest}s</span>}
-                  {timedWinStreak > 0 && <span className="text-xs bg-primary/10 text-primary px-2 py-1 rounded-full">{timedWinStreak}W</span>}
+                  {timedPersonalBest !== null && <span className="text-xs bg-accent/10 text-accent-foreground px-2 py-1 rounded-full">Best: {timedPersonalBest}</span>}
                 </div>
               </div>
               <h3 className="font-serif font-bold text-lg text-foreground mb-1">Timed Challenge</h3>
-              <p className="text-sm text-muted-foreground">1 question, 2 minutes. Beat the clock!</p>
+              <p className="text-sm text-muted-foreground">Answer as many as you can in 2 minutes!</p>
             </button>
 
             {/* Topic Quiz */}
@@ -580,9 +596,20 @@ const TestPage = () => {
             </>
           )}
           {mode === "timed" && (
-            <div className={`flex items-center gap-2 text-lg font-bold ${timeLeft < 30 ? "text-destructive animate-pulse" : "text-foreground"}`}>
-              <Clock className="w-5 h-5" />
-              <span>{Math.floor(timeLeft / 60)}:{(timeLeft % 60).toString().padStart(2, "0")}</span>
+            <div className="flex items-center gap-4 sm:gap-6">
+              <div className={`flex items-center gap-2 text-lg font-bold ${timeLeft < 30 ? "text-destructive animate-pulse" : "text-foreground"}`}>
+                <Clock className="w-5 h-5" />
+                <span>{Math.floor(timeLeft / 60)}:{(timeLeft % 60).toString().padStart(2, "0")}</span>
+              </div>
+              <div className="flex items-center gap-1.5 text-sm">
+                <Trophy className="w-4 h-4 text-accent" />
+                <span className="font-medium text-foreground">{timedScore}</span>
+                <span className="text-muted-foreground">correct</span>
+              </div>
+              <div className="flex items-center gap-1.5 text-sm">
+                <span className="font-medium text-foreground">{timedTotal}</span>
+                <span className="text-muted-foreground">answered</span>
+              </div>
             </div>
           )}
         </div>
@@ -644,7 +671,7 @@ const TestPage = () => {
                     </div>
                     <button onClick={nextQuestion}
                       className="mt-4 w-full inline-flex items-center justify-center gap-2 px-6 py-3 rounded-lg bg-hero-gradient text-primary-foreground font-medium text-sm shadow-soft hover:shadow-elevated transition-all">
-                      {mode === "timed" ? "See Result" : currentIndex + 1 >= questions.length ? "See Results" : "Next Question"} <ArrowRight className="w-4 h-4" />
+                      {mode === "timed" ? "Next Question" : currentIndex + 1 >= questions.length ? "See Results" : "Next Question"} <ArrowRight className="w-4 h-4" />
                     </button>
                   </motion.div>
                 )}
