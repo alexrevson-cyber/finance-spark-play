@@ -194,7 +194,7 @@ const TestPage = () => {
     if (quizMode === "daily") {
       filtered = pickDailyQuestions();
     } else if (quizMode === "timed") {
-      filtered = [pickTimedQuestion()];
+      filtered = pickTimedQuestions();
     } else {
       filtered = topic === "all" ? [...allQuestions] : allQuestions.filter(q => q.topic === topic);
       filtered = filtered.sort(() => Math.random() - 0.5).slice(0, 10);
@@ -209,10 +209,12 @@ const TestPage = () => {
     setBestStreak(0);
     setShowResult(false);
     setWrongAnswers([]);
+    setTimedScore(0);
+    setTimedTotal(0);
+    setTimedWrongAnswers([]);
     setMode(quizMode);
     if (quizMode === "timed") {
       setTimeLeft(TIMED_SECONDS);
-      timedStartRef.current = Date.now();
     }
   };
 
