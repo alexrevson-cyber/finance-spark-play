@@ -252,7 +252,16 @@ const TestPage = () => {
 
   const nextQuestion = () => {
     if (mode === "timed") {
-      setMode("timed-result");
+      // In timed mode, immediately go to next question (no end until timer expires)
+      if (currentIndex + 1 >= questions.length) {
+        // Exhausted pool, end early
+        clearInterval(timerRef.current!);
+        finishTimedChallenge();
+        return;
+      }
+      setCurrentIndex(i => i + 1);
+      setSelected(null);
+      setShowResult(false);
       return;
     }
 
@@ -263,24 +272,21 @@ const TestPage = () => {
         const today = new Date().toISOString().slice(0, 10);
         localStorage.setItem(`daily_quiz_${today}`, "true");
         setDailyCompleted(true);
-        // Mark seen IDs
         const seenIds = getSeenDailyIds();
         const newSeen = [...seenIds, ...questions.map(q => q.id)];
         saveSeenDailyIds(newSeen);
-        // Update streak
         const lastDate = localStorage.getItem("daily_last_date");
         const yesterday = new Date(Date.now() - 86400000).toISOString().slice(0, 10);
         let newStreak = 1;
         if (lastDate === yesterday) {
           newStreak = dailyStreak + 1;
         } else if (lastDate === today) {
-          newStreak = dailyStreak; // already counted
+          newStreak = dailyStreak;
         }
         setDailyStreak(newStreak);
         localStorage.setItem("daily_streak", String(newStreak));
         localStorage.setItem("daily_last_date", today);
 
-        // Save to DB
         if (user) {
           supabase.from("daily_streaks").upsert({ user_id: user.id, current_streak: newStreak, best_streak: Math.max(newStreak, dailyStreak), last_activity_date: today }, { onConflict: "user_id" });
         }
@@ -297,6 +303,18 @@ const TestPage = () => {
       setSelected(null);
       setShowResult(false);
     }
+  };
+
+  const finishTimedChallenge = () => {
+    // Update personal best (most correct answers)
+    const finalScore = timedScore + (selected !== null && questions[currentIndex] && selected === questions[currentIndex].correct ? 0 : 0);
+    // timedScore is already updated by handleSelect
+    const pb = timedPersonalBest;
+    if (pb === null || timedScore > pb) {
+      setTimedPersonalBest(timedScore);
+      localStorage.setItem("timed_pb", String(timedScore));
+    }
+    setMode("timed-complete");
   };
 
   const currentQ = questions[currentIndex];
