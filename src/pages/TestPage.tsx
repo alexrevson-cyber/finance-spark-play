@@ -671,7 +671,7 @@ const TestPage = () => {
                     </div>
                     <button onClick={nextQuestion}
                       className="mt-4 w-full inline-flex items-center justify-center gap-2 px-6 py-3 rounded-lg bg-hero-gradient text-primary-foreground font-medium text-sm shadow-soft hover:shadow-elevated transition-all">
-                      {mode === "timed" ? "See Result" : currentIndex + 1 >= questions.length ? "See Results" : "Next Question"} <ArrowRight className="w-4 h-4" />
+                      {mode === "timed" ? "Next Question" : currentIndex + 1 >= questions.length ? "See Results" : "Next Question"} <ArrowRight className="w-4 h-4" />
                     </button>
                   </motion.div>
                 )}
