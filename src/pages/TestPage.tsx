@@ -139,7 +139,7 @@ const TestPage = () => {
     const key = `daily_quiz_${new Date().toISOString().slice(0, 10)}`;
     if (localStorage.getItem(key)) setDailyCompleted(true);
     setDailyStreak(parseInt(localStorage.getItem("daily_streak") || "0", 10));
-    setTimedPersonalBest(localStorage.getItem("timed_pb") ? parseFloat(localStorage.getItem("timed_pb")!) : null);
+    setTimedPersonalBest(localStorage.getItem("timed_pb") ? parseInt(localStorage.getItem("timed_pb")!) : null);
     setTimedWinStreak(parseInt(localStorage.getItem("timed_win_streak") || "0", 10));
   }, []);
 
