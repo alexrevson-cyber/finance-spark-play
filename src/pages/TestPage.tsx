@@ -80,11 +80,11 @@ const mockLeaderboard = [
 ];
 
 const mockTimedLeaderboard = [
-  { name: "SpeedTrader", time: 12, streak: 8 },
-  { name: "QuickMind", time: 18, streak: 6 },
-  { name: "FlashInvestor", time: 22, streak: 5 },
-  { name: "RapidRecall", time: 25, streak: 4 },
-  { name: "SwiftAnalyst", time: 31, streak: 3 },
+  { name: "SpeedTrader", score: 14, streak: 8 },
+  { name: "QuickMind", score: 12, streak: 6 },
+  { name: "FlashInvestor", score: 11, streak: 5 },
+  { name: "RapidRecall", score: 10, streak: 4 },
+  { name: "SwiftAnalyst", score: 9, streak: 3 },
 ];
 
 const difficultyColors = {
