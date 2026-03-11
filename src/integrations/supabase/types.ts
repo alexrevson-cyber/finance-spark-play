@@ -175,7 +175,30 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      get_quiz_leaderboard: {
+        Args: { limit_count?: number }
+        Returns: {
+          best_streak: number
+          display_name: string
+          quiz_count: number
+          total_score: number
+        }[]
+      }
+      get_timed_leaderboard: {
+        Args: { limit_count?: number }
+        Returns: {
+          best_score: number
+          display_name: string
+          quiz_count: number
+        }[]
+      }
+      get_user_quiz_rank: {
+        Args: { p_user_id: string }
+        Returns: {
+          rank: number
+          total_score: number
+        }[]
+      }
     }
     Enums: {
       [_ in never]: never
