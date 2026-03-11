@@ -246,9 +246,6 @@ const TestPage = () => {
   };
 
   const finishTimedChallenge = () => {
-    // Update personal best (most correct answers)
-    const finalScore = timedScore + (selected !== null && questions[currentIndex] && selected === questions[currentIndex].correct ? 0 : 0);
-    // timedScore is already updated by handleSelect
     const pb = timedPersonalBest;
     if (pb === null || timedScore > pb) {
       setTimedPersonalBest(timedScore);
