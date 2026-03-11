@@ -25,24 +25,7 @@ const topicOptions = [
   { value: "general", label: "General" },
 ];
 
-const mockLeaderboard = [
-  { name: "InvestorPro", score: 198, streak: 12 },
-  { name: "MarketMaven", score: 185, streak: 9 },
-  { name: "WealthBuilder", score: 172, streak: 15 },
-  { name: "StockSavvy", score: 164, streak: 7 },
-  { name: "DividendKing", score: 158, streak: 11 },
-  { name: "IndexFundFan", score: 145, streak: 6 },
-  { name: "BondBaron", score: 138, streak: 8 },
-  { name: "ETFExpert", score: 132, streak: 5 },
-];
-
-const mockTimedLeaderboard = [
-  { name: "SpeedTrader", score: 14, streak: 8 },
-  { name: "QuickMind", score: 12, streak: 6 },
-  { name: "FlashInvestor", score: 11, streak: 5 },
-  { name: "RapidRecall", score: 10, streak: 4 },
-  { name: "SwiftAnalyst", score: 9, streak: 3 },
-];
+// Leaderboard data is fetched from Supabase RPCs
 
 const difficultyColors = {
   beginner: "bg-success/10 text-success",
