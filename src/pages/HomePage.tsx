@@ -23,31 +23,54 @@ const dailyQuotes = [
   { text: "It's not how much money you make, but how much money you keep.", author: "Robert Kiyosaki", type: "quote" as const },
   { text: "The goal isn't more money. The goal is living life on your terms.", author: "Chris Brogan", type: "quote" as const },
   { text: "Price is what you pay. Value is what you get.", author: "Warren Buffett", type: "quote" as const },
-  { text: "Investing should be more like watching paint dry or watching grass grow. If you want excitement, take $800 and go to Las Vegas.", author: "Paul Samuelson", type: "quote" as const },
+  { text: "Investing should be more like watching paint dry or watching grass grow.", author: "Paul Samuelson", type: "quote" as const },
   { text: "The stock market is filled with individuals who know the price of everything, but the value of nothing.", author: "Philip Fisher", type: "quote" as const },
   { text: "Financial peace isn't the acquisition of stuff. It's learning to live on less than you make.", author: "Dave Ramsey", type: "quote" as const },
   { text: "Money is a terrible master but an excellent servant.", author: "P.T. Barnum", type: "quote" as const },
-  { text: "What percentage of your income are you investing each month? If the answer is zero, what's one small step you can take this week?", author: "", type: "question" as const },
-  { text: "If you had to explain your investment strategy to a 10-year-old, could you? Simplicity is a superpower.", author: "", type: "question" as const },
-  { text: "What would your financial life look like in 10 years if you started investing just $100 a month today?", author: "", type: "question" as const },
-  { text: "Are you investing out of fear or out of confidence? Understanding your emotions is the first step to better decisions.", author: "", type: "question" as const },
-  { text: "What's one financial concept you've been avoiding because it seems too complex? Today might be the day to tackle it.", author: "", type: "question" as const },
-  { text: "If you lost 20% of your portfolio tomorrow, would you panic sell or buy more? Your answer reveals your risk tolerance.", author: "", type: "question" as const },
-  { text: "Do you know the expense ratio of your investments? Even 1% more in fees can cost you hundreds of thousands over a lifetime.", author: "", type: "question" as const },
-  { text: "What's the difference between being rich and being wealthy? Wealth is freedom — how are you building yours?", author: "", type: "question" as const },
-  { text: "Have you reviewed your investment portfolio in the last 6 months? Regular check-ins keep you aligned with your goals.", author: "", type: "question" as const },
+  { text: "What percentage of your income are you investing each month?", author: "", type: "question" as const },
+  { text: "If you had to explain your investment strategy to a 10-year-old, could you?", author: "", type: "question" as const },
+  { text: "What would your financial life look like in 10 years if you invested $100 a month today?", author: "", type: "question" as const },
+  { text: "Are you investing out of fear or out of confidence?", author: "", type: "question" as const },
+  { text: "What's one financial concept you've been avoiding?", author: "", type: "question" as const },
+  { text: "If you lost 20% of your portfolio tomorrow, would you panic sell or buy more?", author: "", type: "question" as const },
+  { text: "Do you know the expense ratio of your investments?", author: "", type: "question" as const },
+  { text: "What's the difference between being rich and being wealthy?", author: "", type: "question" as const },
+  { text: "Have you reviewed your portfolio in the last 6 months?", author: "", type: "question" as const },
   { text: "Formal education will make you a living; self-education will make you a fortune.", author: "Jim Rohn", type: "quote" as const },
   { text: "Time in the market beats timing the market.", author: "Ken Fisher", type: "quote" as const },
 ];
 
 const dailyRecommendations = [
-  { title: "Consider a Broad Market Index Fund", ticker: "VTI / VTSAX", reasoning: "With markets showing resilience despite mixed economic signals, a total market index fund remains one of the smartest long-term plays. You get instant diversification across thousands of companies, ultra-low fees, and historically strong returns. This is the foundation of any solid portfolio.", risk: "Low", timeHorizon: "Long-term (5+ years)" },
-  { title: "High-Yield Savings or Treasury Bills", ticker: "T-Bills / HYSA", reasoning: "With interest rates still elevated, parking your emergency fund in a high-yield savings account or short-term Treasury bills gives you solid risk-free returns. Before investing in the market, ensure your emergency fund is secure and earning competitive rates.", risk: "Very Low", timeHorizon: "Short-term (0-2 years)" },
-  { title: "International Diversification via ETF", ticker: "VXUS / IXUS", reasoning: "International markets are trading at historically lower valuations compared to U.S. stocks. Adding 20-30% international exposure can reduce overall portfolio risk through geographic diversification while capturing growth in emerging economies.", risk: "Moderate", timeHorizon: "Long-term (5+ years)" },
-  { title: "Dividend Growth ETF", ticker: "VIG / SCHD", reasoning: "Companies that consistently grow their dividends tend to be well-managed, financially healthy businesses. A dividend growth ETF provides both income and capital appreciation potential, making it ideal for investors who want their portfolio to generate cash flow.", risk: "Low-Moderate", timeHorizon: "Medium-Long (3-10 years)" },
-  { title: "Bond Market ETF for Stability", ticker: "BND / AGG", reasoning: "With the interest rate cycle potentially shifting, high-quality bond funds offer attractive yields and can provide a stabilizing counterbalance to stocks in your portfolio. Consider allocating 20-40% of your portfolio to bonds based on your risk tolerance.", risk: "Low", timeHorizon: "Medium-term (2-5 years)" },
-  { title: "Real Estate Investment Trust ETF", ticker: "VNQ / SCHH", reasoning: "REITs provide exposure to real estate without the hassle of owning property. They're required to pay out 90% of income as dividends, making them excellent income generators. Real estate often moves independently of stocks, adding diversification.", risk: "Moderate", timeHorizon: "Long-term (5+ years)" },
-  { title: "Target-Date Retirement Fund", ticker: "VTTSX / FFFHX", reasoning: "If you want a truly hands-off approach, target-date funds automatically adjust your stock-to-bond ratio as you approach retirement. Pick the fund closest to your expected retirement year and contribute consistently. Simplicity is an underrated investment strategy.", risk: "Varies by date", timeHorizon: "Until retirement" },
+  { title: "Consider a Broad Market Index Fund", ticker: "VTI / VTSAX", reasoning: "A total market index fund remains one of the smartest long-term plays. You get instant diversification across thousands of companies, ultra-low fees, and historically strong returns. This is the foundation of any solid portfolio.", risk: "Low", timeHorizon: "Long-term (5+ years)" },
+  { title: "High-Yield Savings or Treasury Bills", ticker: "T-Bills / HYSA", reasoning: "With interest rates still elevated, parking your emergency fund in a high-yield savings account or short-term Treasury bills gives you solid risk-free returns. Before investing in the market, ensure your emergency fund is secure.", risk: "Very Low", timeHorizon: "Short-term (0-2 years)" },
+  { title: "International Diversification via ETF", ticker: "VXUS / IXUS", reasoning: "International markets are trading at historically lower valuations compared to U.S. stocks. Adding 20-30% international exposure can reduce overall portfolio risk through geographic diversification.", risk: "Moderate", timeHorizon: "Long-term (5+ years)" },
+  { title: "Dividend Growth ETF", ticker: "VIG / SCHD", reasoning: "Companies that consistently grow their dividends tend to be well-managed, financially healthy businesses. A dividend growth ETF provides both income and capital appreciation potential.", risk: "Low-Moderate", timeHorizon: "Medium-Long (3-10 years)" },
+  { title: "Bond Market ETF for Stability", ticker: "BND / AGG", reasoning: "High-quality bond funds offer attractive yields and can provide a stabilizing counterbalance to stocks in your portfolio. Consider allocating 20-40% to bonds based on your risk tolerance.", risk: "Low", timeHorizon: "Medium-term (2-5 years)" },
+  { title: "Real Estate Investment Trust ETF", ticker: "VNQ / SCHH", reasoning: "REITs provide exposure to real estate without the hassle of owning property. They're required to pay out 90% of income as dividends, making them excellent income generators.", risk: "Moderate", timeHorizon: "Long-term (5+ years)" },
+  { title: "Target-Date Retirement Fund", ticker: "VTTSX / FFFHX", reasoning: "If you want a truly hands-off approach, target-date funds automatically adjust your stock-to-bond ratio as you approach retirement. Pick the fund closest to your expected retirement year.", risk: "Varies by date", timeHorizon: "Until retirement" },
+  { title: "S&P 500 Index Fund", ticker: "VOO / SPY", reasoning: "The S&P 500 represents 500 of America's largest companies and has averaged ~10% annual returns over the long run. It's Warren Buffett's #1 recommendation for most investors.", risk: "Low-Moderate", timeHorizon: "Long-term (5+ years)" },
+  { title: "Emerging Markets Exposure", ticker: "VWO / IEMG", reasoning: "Emerging markets offer higher growth potential with higher volatility. Countries like India, Brazil, and Indonesia have growing middle classes and expanding economies that can diversify your portfolio.", risk: "High", timeHorizon: "Long-term (7+ years)" },
+  { title: "Developed International Markets", ticker: "EFA / VEA", reasoning: "Developed markets outside the U.S. (Europe, Japan, Australia) often trade at lower valuations. Adding exposure provides diversification without the volatility of emerging markets.", risk: "Moderate", timeHorizon: "Long-term (5+ years)" },
+  { title: "Treasury Inflation-Protected Securities", ticker: "TIP / SCHP", reasoning: "TIPS adjust their principal based on inflation, protecting your purchasing power. They're ideal when inflation is a concern and provide a guaranteed real (after-inflation) return.", risk: "Low", timeHorizon: "Medium-term (3-7 years)" },
+  { title: "Short-Term Government Bonds", ticker: "SGOV / SHV", reasoning: "Ultra-short Treasury ETFs provide the safety of government bonds with minimal interest rate risk. They're a great alternative to savings accounts for cash you might need within 1-2 years.", risk: "Very Low", timeHorizon: "Short-term (0-1 year)" },
+  { title: "High Dividend Yield ETF", ticker: "HDV / DVY", reasoning: "High-dividend ETFs focus on companies paying above-average yields. They can provide a steady income stream and tend to be more stable during market downturns due to their value-oriented holdings.", risk: "Low-Moderate", timeHorizon: "Medium-Long (3+ years)" },
+  { title: "Technology Sector ETF", ticker: "XLK / VGT", reasoning: "Technology continues to drive innovation and economic growth. A tech sector ETF gives concentrated exposure to leaders in AI, cloud computing, and semiconductors, though with higher volatility.", risk: "Moderate-High", timeHorizon: "Long-term (5+ years)" },
+  { title: "Healthcare Sector ETF", ticker: "XLV / VHT", reasoning: "Healthcare is a defensive sector with steady demand regardless of economic cycles. An aging population globally provides a structural tailwind for healthcare companies.", risk: "Moderate", timeHorizon: "Long-term (5+ years)" },
+  { title: "Energy Sector ETF", ticker: "XLE / VDE", reasoning: "Energy companies often benefit from inflation and geopolitical events. They typically pay healthy dividends and can serve as a hedge against rising oil prices affecting other parts of your portfolio.", risk: "Moderate-High", timeHorizon: "Medium-term (3-5 years)" },
+  { title: "Financial Sector ETF", ticker: "XLF / VFH", reasoning: "Banks and financial companies benefit from higher interest rates through wider net interest margins. The sector tends to perform well during economic expansions.", risk: "Moderate", timeHorizon: "Medium-Long (3-7 years)" },
+  { title: "Small-Cap Value ETF", ticker: "AVUV / VBR", reasoning: "Small-cap value stocks have historically outperformed large caps over long periods (the 'size' and 'value' premiums). They're more volatile but offer higher expected returns for patient investors.", risk: "High", timeHorizon: "Long-term (10+ years)" },
+  { title: "Quality Factor ETF", ticker: "QUAL / DGRW", reasoning: "Quality factor ETFs focus on companies with high profitability, stable earnings, and strong balance sheets. They tend to outperform during market downturns while keeping pace during rallies.", risk: "Low-Moderate", timeHorizon: "Long-term (5+ years)" },
+  { title: "Consumer Staples for Defense", ticker: "XLP / VDC", reasoning: "Consumer staples companies (P&G, Coca-Cola, Walmart) sell products people buy regardless of the economy. This defensive sector provides stability and dividends during uncertain times.", risk: "Low", timeHorizon: "Medium-Long (3+ years)" },
+  { title: "Utilities Sector ETF", ticker: "XLU / VPU", reasoning: "Utilities provide essential services (electricity, water, gas) with regulated revenue. They offer high dividend yields and defensive characteristics, performing well when the economy slows.", risk: "Low", timeHorizon: "Medium-Long (3+ years)" },
+  { title: "REIT Focused on Data Centers", ticker: "O / DLR", reasoning: "Realty Income (O) is a monthly dividend payer, while Digital Realty (DLR) operates data centers powering the AI revolution. Both offer inflation protection through real assets.", risk: "Moderate", timeHorizon: "Long-term (5+ years)" },
+  { title: "I-Bonds for Inflation Protection", ticker: "I-Bonds (TreasuryDirect)", reasoning: "I-Bonds are U.S. savings bonds with an interest rate that adjusts for inflation. They're virtually risk-free and limited to $10,000/year per person — a perfect complement to your emergency fund.", risk: "Very Low", timeHorizon: "Medium-term (1-5 years)" },
+  { title: "HSA Investment Strategy", ticker: "HSA Funds", reasoning: "If you have a high-deductible health plan, max out your HSA. It offers a triple tax advantage: deductible contributions, tax-free growth, and tax-free withdrawals for medical expenses. After 65, it works like a Traditional IRA.", risk: "Varies", timeHorizon: "Long-term (5+ years)" },
+  { title: "Emergency Fund Optimization", ticker: "HYSA / Money Market", reasoning: "Before investing aggressively, ensure your emergency fund (3-6 months of expenses) is in a high-yield savings account earning 4-5%. This safety net prevents you from selling investments during emergencies.", risk: "Very Low", timeHorizon: "Immediate" },
+  { title: "Total International Bond Fund", ticker: "BNDX / IAGG", reasoning: "International bonds provide diversification beyond U.S. fixed income. Currency-hedged versions reduce exchange rate risk while capturing yields from developed global bond markets.", risk: "Low", timeHorizon: "Medium-term (3-5 years)" },
+  { title: "Mid-Cap Growth ETF", ticker: "VO / IJH", reasoning: "Mid-cap companies are often past the riskiest startup phase but still have significant room to grow. They represent a sweet spot between the stability of large caps and the growth potential of small caps.", risk: "Moderate", timeHorizon: "Long-term (5+ years)" },
+  { title: "Balanced Fund for Simplicity", ticker: "VBIAX / FBALX", reasoning: "A balanced fund holds ~60% stocks and ~40% bonds in a single fund, automatically rebalancing for you. It's perfect for investors who want broad diversification without managing multiple holdings.", risk: "Moderate", timeHorizon: "Medium-Long (5+ years)" },
+  { title: "Clean Energy / ESG ETF", ticker: "ICLN / ESGU", reasoning: "ESG-focused and clean energy funds invest in companies addressing environmental and social challenges. Government incentives for green energy provide a structural tailwind for this growing sector.", risk: "Moderate-High", timeHorizon: "Long-term (7+ years)" },
+  { title: "Gold ETF as Portfolio Insurance", ticker: "GLD / IAU", reasoning: "Gold serves as a store of value and portfolio diversifier, often rising when stocks fall. A small allocation (5-10%) can reduce overall portfolio volatility and provide a hedge against extreme events.", risk: "Moderate", timeHorizon: "Long-term (5+ years)" },
 ];
 
 const didYouKnowFacts = [
@@ -60,14 +83,14 @@ const didYouKnowFacts = [
   "Index funds were considered a terrible idea when John Bogle launched the first one in 1976. Critics called it 'Bogle's Folly.'",
   "The S&P 500 has had positive annual returns in roughly 73% of all years since its inception.",
   "A penny doubled every day for 30 days becomes over $5.3 million. That's the power of compounding.",
-  "The average 401(k) balance for people aged 60-69 is around $200,000 — far less than most experts recommend for retirement.",
-  "Dollar-cost averaging into an index fund has outperformed lump-sum investing about 30% of the time — but it also reduces regret and stress significantly.",
-  "The first stock exchange was established in Amsterdam in 1602 when the Dutch East India Company offered shares to the public.",
+  "The average 401(k) balance for people aged 60-69 is around $200,000 — far less than most experts recommend.",
+  "Dollar-cost averaging into an index fund has outperformed lump-sum investing about 30% of the time — but reduces stress significantly.",
+  "The first stock exchange was established in Amsterdam in 1602.",
   "Approximately 90% of actively managed funds underperform their benchmark index over a 15-year period.",
-  "The Rule of 72: divide 72 by your annual return rate to estimate how many years it takes to double your money. At 8%, that's about 9 years.",
+  "The Rule of 72: divide 72 by your annual return rate to estimate how many years it takes to double your money.",
   "Berkshire Hathaway stock was $19 per share when Buffett took over in 1965. Today it trades at over $600,000 per share.",
   "The longest bull market in U.S. history lasted 11 years, from March 2009 to February 2020.",
-  "Jack Bogle, founder of Vanguard, estimated that investors lose about 2.5% per year to fees, taxes, and poor timing decisions.",
+  "Jack Bogle estimated that investors lose about 2.5% per year to fees, taxes, and poor timing decisions.",
   "Only about 55% of Americans own stocks, either directly or through retirement accounts.",
   "The average annual return of the S&P 500 over the last 50 years is approximately 10.5% before inflation.",
   "Tax-loss harvesting can save the average investor between 0.5% to 1.5% in taxes annually.",
@@ -75,20 +98,20 @@ const didYouKnowFacts = [
   "Japan's stock market took 34 years to recover its 1989 peak — a reminder that diversification across countries matters.",
   "REITs have outperformed stocks over many 20-year periods while providing consistent dividend income.",
   "The first mutual fund was created in the Netherlands in 1774, predating the United States itself.",
-  "Dollar-cost averaging works because you buy more shares when prices are low and fewer when prices are high.",
-  "Benjamin Graham, Warren Buffett's mentor, said the market is a voting machine in the short run but a weighing machine in the long run.",
+  "Benjamin Graham said the market is a voting machine in the short run but a weighing machine in the long run.",
   "The average holding period for a stock has dropped from 8 years in the 1960s to less than 6 months today.",
   "Inflation averaging 3% per year means your money loses half its purchasing power every 24 years if not invested.",
   "The Roth IRA was introduced in 1997 and named after Senator William Roth of Delaware.",
   "Approximately 80% of day traders lose money. Long-term investing remains the most reliable path to wealth.",
+  "Dollar-cost averaging works because you buy more shares when prices are low and fewer when prices are high.",
 ];
 
-const mockNews = [
-  { title: "Fed Signals Steady Rates Through Mid-2026", summary: "The Federal Reserve maintained its current rate policy, suggesting economic stability. This is generally positive for long-term investors as it reduces uncertainty about borrowing costs.", time: "2h ago" },
-  { title: "Tech Sector Continues to Lead Market Gains", summary: "Major tech companies reported strong earnings, pushing the NASDAQ to new highs. A reminder that staying invested in quality companies pays off over time.", time: "4h ago" },
-  { title: "New Investors Surge: Record Brokerage Signups in Q1", summary: "More people are opening investment accounts than ever before, with fintech platforms reporting record signups. Financial literacy is on the rise globally.", time: "6h ago" },
-  { title: "Global Supply Chains Show Signs of Recovery", summary: "International shipping rates and delivery times are improving, which could benefit consumer goods companies and reduce inflationary pressures across the economy.", time: "8h ago" },
-  { title: "Renewable Energy Investments Hit Record $500B", summary: "Clean energy investments reached a new milestone globally. ESG-focused investors are seeing strong returns as governments worldwide accelerate green energy transitions.", time: "12h ago" },
+const educationalArticles = [
+  { title: "Why Index Funds Beat Active Management", summary: "Research consistently shows over 90% of active fund managers fail to beat their benchmark index over 15 years. Learn why passive investing is the winning strategy.", source: "Investment Research" },
+  { title: "The Power of Starting Early: A Compound Interest Story", summary: "How investing just $200/month starting at age 25 vs. 35 can mean a difference of over $400,000 by retirement, thanks to compound growth.", source: "Financial Education" },
+  { title: "Understanding Your Risk Tolerance", summary: "Your risk tolerance affects every investment decision. Learn how to assess yours and build a portfolio that lets you sleep at night.", source: "Portfolio Strategy" },
+  { title: "Tax-Advantaged Accounts Explained: IRA, 401k, HSA", summary: "Maximize your wealth by understanding which accounts to fund first and how each provides unique tax benefits for your financial goals.", source: "Tax Strategy" },
+  { title: "The Psychology of Market Crashes", summary: "Why we panic sell at the worst possible time and how to build systems that protect you from your own behavioral biases during downturns.", source: "Behavioral Finance" },
 ];
 
 const marketData = [
@@ -246,13 +269,33 @@ const HomePage = () => {
         </section>
       )}
 
+      {/* Continue Learning Prompt */}
+      {user && lessonsCompleted > 0 && lessonsCompleted < 13 && (
+        <section className="max-w-6xl mx-auto px-4 sm:px-6 pb-6">
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.27 }}>
+            <Link to="/learn" className="block rounded-xl bg-primary/5 border border-primary/20 p-5 hover:bg-primary/10 transition-colors group">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+                  <BookOpen className="w-6 h-6 text-primary" />
+                </div>
+                <div className="flex-1">
+                  <p className="font-serif font-bold text-foreground">Continue Learning</p>
+                  <p className="text-sm text-muted-foreground">{lessonsCompleted} of 13 lessons completed — keep going!</p>
+                </div>
+                <ArrowRight className="w-5 h-5 text-primary shrink-0" />
+              </div>
+            </Link>
+          </motion.div>
+        </section>
+      )}
+
       {/* Market Snapshot */}
       <section className="max-w-6xl mx-auto px-4 sm:px-6 pb-6">
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}>
           <div className="flex items-center gap-2 mb-4">
             <BarChart3 className="w-4 h-4 text-primary" />
             <span className="text-sm font-medium text-muted-foreground uppercase tracking-wider">Market Snapshot</span>
-            <span className="text-xs text-muted-foreground ml-auto">Delayed data · For educational purposes</span>
+            <span className="text-xs text-muted-foreground ml-auto">Illustrative data · For educational purposes</span>
           </div>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
             {marketData.map((item) => (
@@ -364,24 +407,24 @@ const HomePage = () => {
         </motion.div>
       </section>
 
-      {/* News Feed */}
+      {/* Educational Articles */}
       <section className="max-w-6xl mx-auto px-4 sm:px-6 pb-16">
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.55 }}>
           <div className="flex items-center gap-2 mb-4">
             <Newspaper className="w-4 h-4 text-primary" />
-            <span className="text-sm font-medium text-muted-foreground uppercase tracking-wider">Financial News</span>
+            <span className="text-sm font-medium text-muted-foreground uppercase tracking-wider">Featured Learning</span>
           </div>
           <div className="space-y-3">
-            {mockNews.map((item, i) => (
-              <div key={i} className="rounded-xl bg-card border border-border p-5 shadow-card hover:shadow-soft transition-shadow">
+            {educationalArticles.map((item, i) => (
+              <Link key={i} to="/learn" className="block rounded-xl bg-card border border-border p-5 shadow-card hover:shadow-soft transition-shadow">
                 <div className="flex items-start justify-between gap-4">
                   <div>
                     <h4 className="font-serif font-bold text-foreground mb-1">{item.title}</h4>
                     <p className="text-sm text-muted-foreground leading-relaxed">{item.summary}</p>
                   </div>
-                  <span className="text-xs text-muted-foreground whitespace-nowrap mt-1">{item.time}</span>
+                  <span className="text-xs text-muted-foreground whitespace-nowrap mt-1">{item.source}</span>
                 </div>
-              </div>
+              </Link>
             ))}
           </div>
         </motion.div>
