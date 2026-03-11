@@ -336,15 +336,7 @@ const TestPage = () => {
           <button onClick={() => setShowTimedLeaderboard(false)} className="flex items-center gap-2 text-muted-foreground hover:text-foreground mb-8 text-sm font-medium">← Back</button>
           <div className="flex items-center gap-3 mb-8"><Timer className="w-8 h-8 text-accent" /><h1 className="text-3xl font-serif font-bold text-foreground">Timed Challenge Leaderboard</h1></div>
           <p className="text-sm text-muted-foreground mb-6">Most correct answers in 2 minutes</p>
-          <div className="space-y-3">
-            {mockTimedLeaderboard.map((e, i) => (
-              <div key={e.name} className={`flex items-center gap-4 rounded-xl bg-card border border-border p-4 shadow-card ${i < 3 ? "border-accent/30" : ""}`}>
-                <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm ${i === 0 ? "bg-accent/20 text-accent" : "bg-secondary text-muted-foreground"}`}>{i + 1}</div>
-                <div className="flex-1"><p className="font-medium text-foreground">{e.name}</p><p className="text-xs text-muted-foreground">{e.streak} game streak</p></div>
-                <p className="text-lg font-bold text-foreground">{e.score} correct</p>
-              </div>
-            ))}
-          </div>
+          <p className="text-center text-muted-foreground py-8">Complete timed challenges to appear on the leaderboard! Be one of the first.</p>
         </div>
       </div>
     );
@@ -356,18 +348,11 @@ const TestPage = () => {
         <div className="max-w-2xl mx-auto px-4 sm:px-6">
           <button onClick={() => setShowLeaderboard(false)} className="flex items-center gap-2 text-muted-foreground hover:text-foreground mb-8 text-sm font-medium">← Back to Quiz Menu</button>
           <div className="flex items-center gap-3 mb-8"><Medal className="w-8 h-8 text-accent" /><h1 className="text-3xl font-serif font-bold text-foreground">Leaderboard</h1></div>
-          <div className="space-y-3">
-            {mockLeaderboard.map((entry, i) => (
-              <div key={entry.name} className={`flex items-center gap-4 rounded-xl bg-card border border-border p-4 shadow-card ${i < 3 ? "border-accent/30" : ""}`}>
-                <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm ${i === 0 ? "bg-accent/20 text-accent" : "bg-secondary text-muted-foreground"}`}>{i + 1}</div>
-                <div className="flex-1"><p className="font-medium text-foreground">{entry.name}</p><p className="text-xs text-muted-foreground">{entry.streak} day streak</p></div>
-                <p className="text-lg font-bold text-foreground">{entry.score}</p>
-              </div>
-            ))}
-          </div>
+          <p className="text-center text-muted-foreground py-8">Complete quizzes to appear on the leaderboard! Be one of the first.</p>
         </div>
       </div>
     );
+  }
   }
 
   // Menu
