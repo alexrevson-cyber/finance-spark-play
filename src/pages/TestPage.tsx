@@ -353,7 +353,6 @@ const TestPage = () => {
       </div>
     );
   }
-  }
 
   // Menu
   if (mode === "menu") {
