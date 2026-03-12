@@ -25,8 +25,6 @@ const topicOptions = [
   { value: "general", label: "General" },
 ];
 
-// Leaderboard data is fetched from Supabase RPCs
-
 const difficultyColors = {
   beginner: "bg-success/10 text-success",
   intermediate: "bg-accent/20 text-accent-foreground",
@@ -38,7 +36,6 @@ type QuizMode = "menu" | "quiz" | "daily" | "timed" | "complete" | "timed-comple
 const DAILY_QUESTIONS_COUNT = 5;
 const TIMED_SECONDS = 120;
 
-// Helper to get seen question IDs from localStorage
 const getSeenDailyIds = (): number[] => {
   try { return JSON.parse(localStorage.getItem("daily_seen_ids") || "[]"); } catch { return []; }
 };
@@ -48,6 +45,19 @@ const getSeenTimedIds = (): number[] => {
   try { return JSON.parse(localStorage.getItem("timed_seen_ids") || "[]"); } catch { return []; }
 };
 const saveSeenTimedIds = (ids: number[]) => localStorage.setItem("timed_seen_ids", JSON.stringify(ids));
+
+interface LeaderboardEntry {
+  display_name: string;
+  total_score: number;
+  quiz_count: number;
+  best_streak: number;
+}
+
+interface TimedLeaderboardEntry {
+  display_name: string;
+  best_score: number;
+  quiz_count: number;
+}
 
 const TestPage = () => {
   const [mode, setMode] = useState<QuizMode>("menu");
@@ -68,22 +78,44 @@ const TestPage = () => {
   const [timedScore, setTimedScore] = useState(0);
   const [timedTotal, setTimedTotal] = useState(0);
   const [timedPersonalBest, setTimedPersonalBest] = useState<number | null>(null);
-  const [timedWinStreak, setTimedWinStreak] = useState(0);
   const [showTimedLeaderboard, setShowTimedLeaderboard] = useState(false);
   const [timedWrongAnswers, setTimedWrongAnswers] = useState<{ q: Question; selectedIdx: number }[]>([]);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const { user } = useAuth();
 
-  // Load daily quiz state & streak
+  // Leaderboard state
+  const [leaderboardData, setLeaderboardData] = useState<LeaderboardEntry[]>([]);
+  const [timedLeaderboardData, setTimedLeaderboardData] = useState<TimedLeaderboardEntry[]>([]);
+  const [userRank, setUserRank] = useState<{ rank: number; total_score: number } | null>(null);
+  const [leaderboardLoading, setLeaderboardLoading] = useState(false);
+
   useEffect(() => {
     const key = `daily_quiz_${new Date().toISOString().slice(0, 10)}`;
     if (localStorage.getItem(key)) setDailyCompleted(true);
     setDailyStreak(parseInt(localStorage.getItem("daily_streak") || "0", 10));
     setTimedPersonalBest(localStorage.getItem("timed_pb") ? parseInt(localStorage.getItem("timed_pb")!) : null);
-    setTimedWinStreak(parseInt(localStorage.getItem("timed_win_streak") || "0", 10));
   }, []);
 
-  // Timer for timed mode — counts down, ends challenge when 0
+  const fetchLeaderboard = useCallback(async () => {
+    setLeaderboardLoading(true);
+    try {
+      const { data } = await supabase.rpc("get_quiz_leaderboard", { limit_count: 10 });
+      if (data) setLeaderboardData(data as LeaderboardEntry[]);
+      if (user) {
+        const { data: rankData } = await supabase.rpc("get_user_quiz_rank", { p_user_id: user.id });
+        if (rankData && rankData.length > 0) setUserRank(rankData[0] as any);
+      }
+    } catch (e) { console.error("Leaderboard fetch error:", e); }
+    setLeaderboardLoading(false);
+  }, [user]);
+
+  const fetchTimedLeaderboard = useCallback(async () => {
+    try {
+      const { data } = await supabase.rpc("get_timed_leaderboard", { limit_count: 10 });
+      if (data) setTimedLeaderboardData(data as TimedLeaderboardEntry[]);
+    } catch (e) { console.error("Timed leaderboard fetch error:", e); }
+  }, []);
+
   useEffect(() => {
     if (mode === "timed" && timeLeft > 0) {
       timerRef.current = setInterval(() => {
@@ -108,13 +140,10 @@ const TestPage = () => {
     const seenIds = getSeenDailyIds();
     let unseen = allQuestions.filter(q => !seenIds.includes(q.id));
     if (unseen.length < DAILY_QUESTIONS_COUNT) {
-      // Reset cycle with new order
       saveSeenDailyIds([]);
       unseen = [...allQuestions];
     }
-    // Shuffle and pick 5 from diverse topics/difficulties
-    const shuffled = unseen.sort(() => Math.random() - 0.5);
-    return shuffled.slice(0, DAILY_QUESTIONS_COUNT);
+    return unseen.sort(() => Math.random() - 0.5).slice(0, DAILY_QUESTIONS_COUNT);
   };
 
   const pickTimedQuestions = (): Question[] => {
@@ -130,7 +159,6 @@ const TestPage = () => {
 
   const startQuiz = (quizMode: "quiz" | "timed" | "daily", topic = "all") => {
     let filtered: Question[];
-
     if (quizMode === "daily") {
       filtered = pickDailyQuestions();
     } else if (quizMode === "timed") {
@@ -139,7 +167,6 @@ const TestPage = () => {
       filtered = topic === "all" ? [...allQuestions] : allQuestions.filter(q => q.topic === topic);
       filtered = filtered.sort(() => Math.random() - 0.5).slice(0, 10);
     }
-
     setQuestions(filtered);
     setCurrentIndex(0);
     setSelected(null);
@@ -153,9 +180,7 @@ const TestPage = () => {
     setTimedTotal(0);
     setTimedWrongAnswers([]);
     setMode(quizMode);
-    if (quizMode === "timed") {
-      setTimeLeft(TIMED_SECONDS);
-    }
+    if (quizMode === "timed") setTimeLeft(TIMED_SECONDS);
   };
 
   const handleSelect = (index: number) => {
@@ -164,14 +189,12 @@ const TestPage = () => {
     setSelected(index);
     setShowResult(true);
     setAnswered(a => a + 1);
-
     if (index === q.correct) {
       setScore(s => s + 1);
       const ns = streak + 1;
       setStreak(ns);
       if (ns > bestStreak) setBestStreak(ns);
       fireConfetti();
-
       if (mode === "timed") {
         setTimedScore(s => s + 1);
         setTimedTotal(t => t + 1);
@@ -192,9 +215,7 @@ const TestPage = () => {
 
   const nextQuestion = () => {
     if (mode === "timed") {
-      // In timed mode, immediately go to next question (no end until timer expires)
       if (currentIndex + 1 >= questions.length) {
-        // Exhausted pool, end early
         clearInterval(timerRef.current!);
         finishTimedChallenge();
         return;
@@ -204,34 +225,26 @@ const TestPage = () => {
       setShowResult(false);
       return;
     }
-
     if (currentIndex + 1 >= questions.length) {
       setMode("complete");
-
       if (mode === "daily") {
         const today = new Date().toISOString().slice(0, 10);
         localStorage.setItem(`daily_quiz_${today}`, "true");
         setDailyCompleted(true);
         const seenIds = getSeenDailyIds();
-        const newSeen = [...seenIds, ...questions.map(q => q.id)];
-        saveSeenDailyIds(newSeen);
+        saveSeenDailyIds([...seenIds, ...questions.map(q => q.id)]);
         const lastDate = localStorage.getItem("daily_last_date");
         const yesterday = new Date(Date.now() - 86400000).toISOString().slice(0, 10);
         let newStreak = 1;
-        if (lastDate === yesterday) {
-          newStreak = dailyStreak + 1;
-        } else if (lastDate === today) {
-          newStreak = dailyStreak;
-        }
+        if (lastDate === yesterday) newStreak = dailyStreak + 1;
+        else if (lastDate === today) newStreak = dailyStreak;
         setDailyStreak(newStreak);
         localStorage.setItem("daily_streak", String(newStreak));
         localStorage.setItem("daily_last_date", today);
-
         if (user) {
           supabase.from("daily_streaks").upsert({ user_id: user.id, current_streak: newStreak, best_streak: Math.max(newStreak, dailyStreak), last_activity_date: today }, { onConflict: "user_id" });
         }
       }
-
       if (user) {
         supabase.from("quiz_scores").insert({
           user_id: user.id, score, total_questions: questions.length,
@@ -251,10 +264,24 @@ const TestPage = () => {
       setTimedPersonalBest(timedScore);
       localStorage.setItem("timed_pb", String(timedScore));
     }
+    if (user) {
+      supabase.from("quiz_scores").insert({
+        user_id: user.id, score: timedScore, total_questions: timedTotal,
+        topic: "timed", difficulty: "mixed", streak: 0,
+      });
+    }
     setMode("timed-complete");
   };
 
   const currentQ = questions[currentIndex];
+
+  // Leaderboard medal
+  const getMedal = (rank: number) => {
+    if (rank === 1) return "🥇";
+    if (rank === 2) return "🥈";
+    if (rank === 3) return "🥉";
+    return `#${rank}`;
+  };
 
   // Timed challenge complete screen
   if (mode === "timed-complete") {
@@ -263,7 +290,7 @@ const TestPage = () => {
       <div className="min-h-screen py-12 sm:py-16">
         <div className="max-w-2xl mx-auto px-4 sm:px-6">
           <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}
-            className="text-center rounded-2xl bg-card border border-border p-10 shadow-card mb-8">
+            className="text-center rounded-2xl bg-card border border-border p-8 sm:p-10 shadow-card mb-8">
             <div className="w-20 h-20 rounded-full bg-accent/10 flex items-center justify-center mx-auto mb-6">
               <Clock className="w-10 h-10 text-accent" />
             </div>
@@ -296,13 +323,12 @@ const TestPage = () => {
                 className="inline-flex items-center gap-2 px-6 py-3 rounded-lg bg-secondary text-secondary-foreground font-medium text-sm">
                 <RotateCcw className="w-4 h-4" /> Back to Menu
               </button>
-              <button onClick={() => setShowTimedLeaderboard(true)}
+              <button onClick={() => { setShowTimedLeaderboard(true); fetchTimedLeaderboard(); }}
                 className="inline-flex items-center gap-2 px-6 py-3 rounded-lg bg-secondary text-secondary-foreground font-medium text-sm">
                 <Medal className="w-4 h-4" /> Leaderboard
               </button>
             </div>
           </motion.div>
-
           {timedWrongAnswers.length > 0 && (
             <div>
               <h3 className="font-serif font-bold text-lg text-foreground mb-4 flex items-center gap-2">
@@ -315,8 +341,8 @@ const TestPage = () => {
                     <p className="text-sm text-destructive mb-1">Your answer: {q.options[selectedIdx]}</p>
                     <p className="text-sm text-success mb-2">Correct answer: {q.options[q.correct]}</p>
                     <p className="text-sm text-muted-foreground mb-3">{q.explanation}</p>
-                    <Link to="/learn" className="text-xs text-primary font-medium hover:underline flex items-center gap-1">
-                      <Link2 className="w-3 h-3" /> Learn more about this topic
+                    <Link to={`/learn`} state={{ topic: q.learnLink }} className="text-xs text-primary font-medium hover:underline flex items-center gap-1">
+                      <Link2 className="w-3 h-3" /> Learn more about {q.topic}
                     </Link>
                   </div>
                 ))}
@@ -336,19 +362,66 @@ const TestPage = () => {
           <button onClick={() => setShowTimedLeaderboard(false)} className="flex items-center gap-2 text-muted-foreground hover:text-foreground mb-8 text-sm font-medium">← Back</button>
           <div className="flex items-center gap-3 mb-8"><Timer className="w-8 h-8 text-accent" /><h1 className="text-3xl font-serif font-bold text-foreground">Timed Challenge Leaderboard</h1></div>
           <p className="text-sm text-muted-foreground mb-6">Most correct answers in 2 minutes</p>
-          <p className="text-center text-muted-foreground py-8">Complete timed challenges to appear on the leaderboard! Be one of the first.</p>
+          {timedLeaderboardData.length > 0 ? (
+            <div className="space-y-3">
+              {timedLeaderboardData.map((entry, i) => (
+                <div key={i} className={`flex items-center gap-4 rounded-xl bg-card border p-4 shadow-card ${i < 3 ? "border-accent" : "border-border"}`}>
+                  <span className="text-lg font-bold w-10 text-center">{getMedal(i + 1)}</span>
+                  <div className="flex-1">
+                    <p className="font-medium text-foreground">{entry.display_name}</p>
+                    <p className="text-xs text-muted-foreground">{entry.quiz_count} attempts</p>
+                  </div>
+                  <p className="text-lg font-bold text-primary">{entry.best_score}</p>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p className="text-center text-muted-foreground py-8">Complete timed challenges to appear on the leaderboard! Be one of the first.</p>
+          )}
         </div>
       </div>
     );
   }
 
+  // Main leaderboard
   if (showLeaderboard) {
     return (
       <div className="min-h-screen py-12 sm:py-16">
         <div className="max-w-2xl mx-auto px-4 sm:px-6">
           <button onClick={() => setShowLeaderboard(false)} className="flex items-center gap-2 text-muted-foreground hover:text-foreground mb-8 text-sm font-medium">← Back to Quiz Menu</button>
           <div className="flex items-center gap-3 mb-8"><Medal className="w-8 h-8 text-accent" /><h1 className="text-3xl font-serif font-bold text-foreground">Leaderboard</h1></div>
-          <p className="text-center text-muted-foreground py-8">Complete quizzes to appear on the leaderboard! Be one of the first.</p>
+          {leaderboardLoading ? (
+            <p className="text-center text-muted-foreground py-8">Loading...</p>
+          ) : leaderboardData.length > 0 ? (
+            <div className="space-y-3">
+              {leaderboardData.map((entry, i) => (
+                <div key={i} className={`flex items-center gap-4 rounded-xl bg-card border p-4 shadow-card ${i < 3 ? "border-accent" : "border-border"}`}>
+                  <span className="text-lg font-bold w-10 text-center">{getMedal(i + 1)}</span>
+                  <div className="flex-1">
+                    <p className="font-medium text-foreground">{entry.display_name}</p>
+                    <p className="text-xs text-muted-foreground">{entry.quiz_count} quizzes · Best streak: {entry.best_streak}</p>
+                  </div>
+                  <p className="text-lg font-bold text-primary">{entry.total_score}</p>
+                </div>
+              ))}
+              {leaderboardData.length < 10 && (
+                <p className="text-center text-muted-foreground text-sm py-4">Be one of the first on the leaderboard!</p>
+              )}
+              {userRank && !leaderboardData.some(e => e.total_score === Number(userRank.total_score)) && (
+                <div className="mt-4 pt-4 border-t border-border">
+                  <div className="flex items-center gap-4 rounded-xl bg-primary/5 border border-primary/20 p-4">
+                    <span className="text-lg font-bold w-10 text-center">#{userRank.rank}</span>
+                    <div className="flex-1">
+                      <p className="font-medium text-foreground">You</p>
+                    </div>
+                    <p className="text-lg font-bold text-primary">{userRank.total_score}</p>
+                  </div>
+                </div>
+              )}
+            </div>
+          ) : (
+            <p className="text-center text-muted-foreground py-8">Complete quizzes to appear on the leaderboard! Be one of the first.</p>
+          )}
         </div>
       </div>
     );
@@ -371,7 +444,6 @@ const TestPage = () => {
           </div>
 
           <div className="grid sm:grid-cols-2 gap-4 mb-8">
-            {/* Daily Quiz */}
             <button onClick={() => !dailyCompleted && startQuiz("daily")} disabled={dailyCompleted}
               className={`text-left rounded-xl bg-card border border-border p-6 shadow-card transition-all ${dailyCompleted ? "opacity-60" : "hover:shadow-elevated hover:-translate-y-1"}`}>
               <div className="flex items-center justify-between mb-3">
@@ -382,20 +454,16 @@ const TestPage = () => {
               <p className="text-sm text-muted-foreground">{dailyCompleted ? "✅ Completed today! Come back tomorrow." : "5 questions per day. Build your streak!"}</p>
             </button>
 
-            {/* Timed Challenge */}
             <button onClick={() => startQuiz("timed")}
               className="text-left rounded-xl bg-card border border-border p-6 shadow-card hover:shadow-elevated hover:-translate-y-1 transition-all">
               <div className="flex items-center justify-between mb-3">
                 <Zap className="w-8 h-8 text-destructive" />
-                <div className="flex gap-2">
-                  {timedPersonalBest !== null && <span className="text-xs bg-accent/10 text-accent-foreground px-2 py-1 rounded-full">Best: {timedPersonalBest}</span>}
-                </div>
+                {timedPersonalBest !== null && <span className="text-xs bg-accent/10 text-accent-foreground px-2 py-1 rounded-full">Best: {timedPersonalBest}</span>}
               </div>
               <h3 className="font-serif font-bold text-lg text-foreground mb-1">Timed Challenge</h3>
               <p className="text-sm text-muted-foreground">Answer as many as you can in 2 minutes!</p>
             </button>
 
-            {/* Topic Quiz */}
             <div className="rounded-xl bg-card border border-border p-6 shadow-card sm:col-span-2">
               <div className="flex items-center gap-2 mb-4"><Filter className="w-5 h-5 text-primary" /><h3 className="font-serif font-bold text-lg text-foreground">Topic Quiz</h3></div>
               <p className="text-sm text-muted-foreground mb-4">Choose a topic and difficulty to test your knowledge.</p>
@@ -414,7 +482,7 @@ const TestPage = () => {
             </div>
           </div>
 
-          <button onClick={() => setShowLeaderboard(true)}
+          <button onClick={() => { setShowLeaderboard(true); fetchLeaderboard(); }}
             className="w-full flex items-center justify-center gap-2 px-6 py-3 rounded-lg bg-secondary text-secondary-foreground font-medium text-sm hover:bg-secondary/80 transition-colors">
             <Medal className="w-4 h-4" /> View Leaderboard
           </button>
@@ -430,7 +498,7 @@ const TestPage = () => {
       <div className="min-h-screen py-12 sm:py-16">
         <div className="max-w-2xl mx-auto px-4 sm:px-6">
           <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}
-            className="text-center rounded-2xl bg-card border border-border p-10 shadow-card mb-8">
+            className="text-center rounded-2xl bg-card border border-border p-8 sm:p-10 shadow-card mb-8">
             <div className="w-20 h-20 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-6">
               <Trophy className="w-10 h-10 text-primary" />
             </div>
@@ -445,18 +513,14 @@ const TestPage = () => {
                 : "Every expert was once a beginner. Keep going! 🌱"}
             </p>
             {bestStreak > 1 && <p className="text-sm text-accent font-medium mb-2">Best streak: {bestStreak} in a row! 🔥</p>}
-
-            {/* Topics covered */}
             <div className="flex flex-wrap justify-center gap-1.5 mb-4">
               {coveredTopics.map(t => <span key={t} className="text-xs bg-secondary text-secondary-foreground px-2 py-0.5 rounded-full">{t}</span>)}
             </div>
-
             {dailyCompleted && (
               <div className="bg-accent/10 rounded-lg p-4 mb-4">
                 <p className="text-sm text-foreground flex items-center justify-center gap-1.5"><Flame className="w-4 h-4 text-accent" /> {dailyStreak} day streak — keep it going, come back tomorrow!</p>
               </div>
             )}
-
             <div className="flex gap-3 justify-center flex-wrap">
               <button onClick={() => setMode("menu")}
                 className="inline-flex items-center gap-2 px-6 py-3 rounded-lg bg-hero-gradient text-primary-foreground font-medium text-sm shadow-soft">
@@ -483,8 +547,8 @@ const TestPage = () => {
                     <p className="text-sm text-destructive mb-1">Your answer: {q.options[selectedIdx]}</p>
                     <p className="text-sm text-success mb-2">Correct answer: {q.options[q.correct]}</p>
                     <p className="text-sm text-muted-foreground mb-3">{q.explanation}</p>
-                    <Link to="/learn" className="text-xs text-primary font-medium hover:underline flex items-center gap-1">
-                      <Link2 className="w-3 h-3" /> Learn more about this topic
+                    <Link to={`/learn`} state={{ topic: q.learnLink }} className="text-xs text-primary font-medium hover:underline flex items-center gap-1">
+                      <Link2 className="w-3 h-3" /> Learn more about {q.topic}
                     </Link>
                   </div>
                 ))}
@@ -500,7 +564,6 @@ const TestPage = () => {
   return (
     <div className="min-h-screen py-12 sm:py-16">
       <div className="max-w-2xl mx-auto px-4 sm:px-6">
-        {/* Stats bar */}
         <div className="flex items-center justify-center gap-4 sm:gap-6 mb-6 flex-wrap">
           {mode !== "timed" && (
             <>
@@ -535,7 +598,6 @@ const TestPage = () => {
           )}
         </div>
 
-        {/* Progress bar (not for timed) */}
         {mode !== "timed" && (
           <div className="w-full h-2 rounded-full bg-secondary mb-8">
             <motion.div className="h-full rounded-full bg-hero-gradient" initial={{ width: 0 }}
@@ -568,7 +630,7 @@ const TestPage = () => {
                   }
                   return (
                     <button key={i} onClick={() => handleSelect(i)} disabled={showResult}
-                      className={`w-full text-left px-5 py-4 rounded-xl border-2 transition-all duration-200 flex items-center gap-3 ${optionClass} ${!showResult ? "cursor-pointer" : "cursor-default"}`}>
+                      className={`w-full text-left px-4 sm:px-5 py-3 sm:py-4 rounded-xl border-2 transition-all duration-200 flex items-center gap-3 ${optionClass} ${!showResult ? "cursor-pointer" : "cursor-default"}`}>
                       <span className="w-8 h-8 rounded-lg bg-secondary flex items-center justify-center text-sm font-medium text-secondary-foreground shrink-0">
                         {String.fromCharCode(65 + i)}
                       </span>
@@ -585,8 +647,8 @@ const TestPage = () => {
                     <div className={`rounded-xl p-4 ${selected === currentQ.correct ? "bg-success/10" : "bg-destructive/5"}`}>
                       <p className="text-sm text-foreground leading-relaxed">{currentQ.explanation}</p>
                       {selected !== currentQ.correct && (
-                        <Link to="/learn" className="text-xs text-primary font-medium hover:underline mt-2 flex items-center gap-1">
-                          <BookOpen className="w-3 h-3" /> Review this topic in Learn
+                        <Link to="/learn" state={{ topic: currentQ.learnLink }} className="text-xs text-primary font-medium hover:underline mt-2 flex items-center gap-1">
+                          <BookOpen className="w-3 h-3" /> Review {currentQ.topic} in Learn
                         </Link>
                       )}
                     </div>
